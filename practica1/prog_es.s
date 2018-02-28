@@ -36,7 +36,7 @@ INIT:
 PRINT:  RTS
 
 **************************** FIN PRINT ********************************************************
-
+*alex
 **************************** SCAN ************************************************************
 SCAN:   MOVE.B #10,D3		*Contador
 b_scan:	BTST #0,SRA		*Comparamos el bit 0 (RxRDY) de SRA con 1, sin es != se va a fin
