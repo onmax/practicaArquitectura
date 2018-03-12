@@ -1,0 +1,143 @@
+* Inicializa el SP y el PC
+**************************
+        ORG     $0
+        DC.L    $8000           * Pila
+        DC.L    INICIO          * PC
+
+        ORG     $10000          * HOLA MUNDO
+        DC.L    68
+        DC.L    6f
+        DC.L    6c
+        DC.L    61
+        DC.L    20
+        DC.L    6d
+        DC.L    75
+        DC.L    6e
+        DC.L    64
+        DC.L    6f
+        ORG     $12000
+        ORG     $14000
+        ORG     $16000
+
+
+        ORG     $400
+
+* Definici?n de equivalencias
+***************************************
+*********************************
+
+MR1A    EQU     $effc01       * de modo A (escritura)
+MR2A    EQU     $effc01       * de modo A (2? escritura)
+SRA     EQU     $effc03       * de estado A (lectura)
+CSRA    EQU     $effc03       * de seleccion de reloj A (escritura)
+CRA     EQU     $effc05       * de control A (escritura)
+TBA     EQU     $effc07       * buffer transmision A (escritura)
+RBA     EQU     $effc07       * buffer recepcion A  (lectura)
+ACR	    EQU   	$effc09	      * de control auxiliar
+IMR     EQU     $effc0B       * de mascara de interrupcion A (escritura)
+ISR     EQU     $effc0B       * de estado de interrupcion A (lectura)
+
+
+*Definicion de posiciones de memoria
+***************************************
+        ORG             #$10000,
+
+
+**************************** INIT *************************************************************
+INIT:
+        MOVE.B          #%00010000,CRA      * Reinicia el puntero MR1
+        MOVE.B          #%00000011,MR1A     * 8 bits por caracter.
+        MOVE.B          #%00000000,MR2A     * Eco desactivado.
+        MOVE.B          #%11001100,CSRA     * Velocidad = 38400 bps.
+        MOVE.B          #%00000000,ACR      * Velocidad = 38400 bps.
+        MOVE.B          #%00000101,CRA      * Transmision y recepcion activados.
+        RTS
+**************************** FIN INIT *********************************************************
+
+
+
+
+
+
+
+
+**************************** PRINT ************************************************************
+PRINT:  RTS
+
+**************************** FIN PRINT ********************************************************
+
+
+
+
+
+
+**************************** SCAN ************************************************************
+SCAN:   MOVE.B #10,D3		*Contador
+b_scan:	BTST #0,SRA		*Comparamos el bit 0 (RxRDY) de SRA con 1, sin es != se va a fin
+	BNE fin
+	MOVE.B RBA,-(A7)	*Obtenemos el caracter y lo llevamos a pila
+	ADD D3,1		*Sumamos 1 al contador en cada iteracion
+	CMP #13,RBA		*Comparamos 13 con D0
+	BNE b_scan
+fin:	DC.L $8000		*SP la dejamos igual
+	RTS
+**************************** FIN SCAN ********************************************************
+
+
+
+
+**************************** LEERCAR ************************************************************
+LEERCAR:   MOVE.L     D0, D1
+	         BTST       #0, D1
+	         BEQ        LC_CERO	        *If it is equal to 0
+	         MOVE.B     D0, D1
+LIN.B:	   BTST       #1, D1	        *Buffer
+	         BEQ        RECEP
+LC_CERO:   MOVE.L     0xFFFFFFFF, D0
+	         RTS
+
+
+**************************** FIN LEERCAR ********************************************************
+
+**************************** ESCCAR ************************************************************
+ESCCAR:  RTS
+
+**************************** FIN ESCCAR ********************************************************
+
+
+
+
+
+**************************** LINEA ************************************************************
+LINEA:  RTS
+
+**************************** FIN LINEA ********************************************************
+
+
+
+**************************** MEMORIA *********************************************************
+MEMORIA:  MOVE.L #$10000,A2
+          MOVE.L #$10100,A3
+          MOVE.L #$10200,A4
+          MOVE.L #$10300,A5
+          MOVE.L A2,-(A7)    *SRA
+          MOVE.L A3,-(A7)    *SRB
+          MOVE.L A4,-(A7)    *TBA
+          MOVE.L A5,-(A7)    *TBB
+          RTS
+
+**************************** FIN MEMORIA *****************************************************
+
+**************************** PROGRAMA PRINCIPAL **********************************************
+INICIO: BSR             INIT                * Inicia el controlador
+        BSR             MEMORIA
+
+        BSR             LEERCAR               * Recibe la linea
+        *ADD.L           #4,A7               * Restaura la pila
+        *MOVE.L          #$5000,-(A7)        * Prepara la direcci?n del buffer
+        *BSR             PRINT               * Imprime l?nea
+        *ADD.L           #4,A7               * Restaura la pila
+BRA		  OTRO
+
+         BREAK
+**************************** FIN PROGRAMA PRINCIPAL ******************************************
