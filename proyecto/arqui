@@ -4,23 +4,14 @@
         DC.L    $8000           * Pila
         DC.L    INICIO          * PC
 
-bfa_r: ORG     $10000          * HOLA MUNDO
-        DC.B    68
-        DC.B    6f
-        DC.B    6c
-        DC.B    61
-        DC.B    20
-        DC.B    6d
-        DC.B    75
-        DC.B    6e
-        DC.B    64
-        DC.B    6f
+bfa_r:  ORG     $10000          * HOLA MUNDO
+        DC.B    "HOLA MUNDO"
 bfb_r:  ORG     $12000
 bfa_t:  ORG     $14000
 bfb_t:  ORG     $16000
 
 
-        ORG     $400
+        ORG     $20000
 
 * Definici?n de equivalencias
 ***************************************
@@ -48,23 +39,24 @@ TBB     EQU     $effc17       * buffer transmision B (escritura)
 *ambas. Ver tabla pg.37
 IMR     EQU     $effc0B       * de mascara de interrupcion A (escritura)
 ISR     EQU     $effc0B       * de estado de interrupcion A (lectura)
-IVR	    EQU   	$effc19	      * de control auxiliar
+IVR     EQU   	$effc19	      * de control auxiliar
 
 
-tam_bf   EQU     2001
+*Buffers
+tam_bf  EQU     2000
 
 bfa_r:  DS.B    tam_bf
 bfa_t:  DS.B    tam_bf
 bfb_r:  DS.B    tam_bf
 bfb_t:  DS.B    tam_bf
 
+
+*Punteros
+MOVE.L $10000, bfa_r_i
+MOVE.L $10000, bfa_r_F
+
 CPIMR:  DC.B    0
 
-
-
-*Definicion de posiciones de memoria
-***************************************
-        ORG             #$10000,
 
 
 **************************** INIT *************************************************************
@@ -113,12 +105,13 @@ fin:	      DC.L $8000		*SP la dejamos igual
 
 
 **************************** LEERCAR ************************************************************
-LEERCAR:   MOVE.L     D0, D1
-	         BTST       #0, D1
+LEERCAR:   MOVE.L     bfa_r_i,D0
+	         BTST       #0, D0
 	         BEQ        LC_CERO	        *If it is equal to 0
 	         MOVE.B     D0, D1
 LIN.B:	   BTST       #1, D1	        *Buffer
 	         BEQ        RECEP
+           RTS
 LC_CERO:   MOVE.L     0xFFFFFFFF, D0
 	         RTS
 
