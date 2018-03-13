@@ -26,6 +26,7 @@ bfb_t:  ORG     $16000
 ***************************************
 *********************************
 
+***Para A - Tabla pg.27***
 MR1A    EQU     $effc01       * de modo A (escritura)
 MR2A    EQU     $effc01       * de modo A (2? escritura)
 SRA     EQU     $effc03       * de estado A (lectura)
@@ -33,9 +34,23 @@ CSRA    EQU     $effc03       * de seleccion de reloj A (escritura)
 CRA     EQU     $effc05       * de control A (escritura)
 TBA     EQU     $effc07       * buffer transmision A (escritura)
 RBA     EQU     $effc07       * buffer recepcion A  (lectura)
+ACR	    EQU   	$effc09	      * de control auxiliar
+
+***Para B - Tabla pg.27***
+MR1B    EQU     $effc11       * de modo B (escritura)
+MR2B    EQU     $effc11       * de modo B (2? escritura)
+SRB     EQU     $effc13       * de estado B (lectura)
+CSRB    EQU     $effc13       * de seleccion de reloj B (escritura)
+CRB     EQU     $effc15       * de control B (escritura)
+RBB     EQU     $effc17       * buffer recepcion B  (lectura)
+TBB     EQU     $effc17       * buffer transmision B (escritura)
+
+*ambas. Ver tabla pg.37
 IMR     EQU     $effc0B       * de mascara de interrupcion A (escritura)
 ISR     EQU     $effc0B       * de estado de interrupcion A (lectura)
-ACR	    EQU   	$effc09	      * de control auxiliar
+IVR	    EQU   	$effc19	      * de control auxiliar
+
+
 tam_bf   EQU     2001
 
 bfa_r:  DS.B    tam_bf
@@ -126,18 +141,6 @@ LINEA:  RTS
 
 
 
-**************************** MEMORIA *********************************************************
-MEMORIA:  MOVE.L #$10000,A2
-          MOVE.L #$10100,A3
-          MOVE.L #$10200,A4
-          MOVE.L #$10300,A5
-          MOVE.L A2,-(A7)    *SRA
-          MOVE.L A3,-(A7)    *SRB
-          MOVE.L A4,-(A7)    *TBA
-          MOVE.L A5,-(A7)    *TBB
-          RTS
-
-**************************** FIN MEMORIA *****************************************************
 
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO: BSR             INIT                * Inicia el controlador
