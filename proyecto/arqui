@@ -121,35 +121,60 @@ SCAN:     RTS
 
 
 
+
+
 **************************** LEERCAR ************************************************************
-LEERCAR:    MOVE.L     D0,D1         *Obtenemos de pila el buffer
-            BTST       #0, D1
-            BEQ        LIN_B	           *Si el bit 0 es un 0
-LIN_A:      BTST       #1, D1            *Si el bit 1 es un 0
+LEERCAR:    MOVE.L     D0,D1            *Obtenemos de pila el buffer
+            BTST       #0, D1           *Si el bit 0 == 0 --> Ir a linea A
+            BEQ        LIN_A            *EOC --> Ir a B
+
+LIN_B:      BTST       #1, D1           *Si el bit 1 == 0 --> Ir a recepcion
+            BEQ        LC_BRB           *EOC --> Ir a transmision
+            BSR        LC_BTB
+
+LIN_A:      BTST       #1, D1            *Se repite el mismo esquema que LIN_B
             BEQ        LC_BRA
             BSR        LC_BTA
-
-LIN_B:      BTST       #1, D1            *Si el bit 1 es un 0
-            BEQ        LC_BRB
-            BSR        LC_BTB
 
 
 
 ******Buffer transmision A******
-LC_BTA:
+LC_BTA:     MOVE.B     bta_i, D1           *Obtener puntero inicio y final y llamada a LC_CHAR
+            MOVE.B     bta_f, D2
+            CMP         D1, D2
+            BEQ         LC_CERO
+            MOVE.L      D1, CHAR
+            MOVE.L      CHAR, D0
 *******Buffer recepcion A*******
-LC_BRA:
+LC_BRA:     MOVE.B     bra_i, D1          *Lo mismo que LC_BTA
+            MOVE.B     bra_f, D2
+            CMP         D1, D2
+            BEQ         LC_CERO
+            MOVE.L      D1, CHAR
+            MOVE.L      CHAR, D0
+********************************
 
 
 ******Buffer transmision B******
-LC_BTB:
+LC_BTB:     MOVE.B      btb_i, D1          *Lo mismo que LC_BTA
+            MOVE.B      btb_f, D2
+            CMP         D1, D2
+            BEQ         LC_CERO
+            MOVE.L      D1, CHAR
+            MOVE.L      CHAR, D0
 *******Buffer recepcion B*******
-LC_BRB:
+LC_BRB:     MOVE.B      brb_i, D1          *Lo mismo que LC_BTA
+            MOVE.B      brb_f, D2
+            CMP         D1, D2
+            BEQ         LC_CERO
+            MOVE.L      D1, CHAR
+            MOVE.L      CHAR, D0
+********************************
 
-
+LC_CERO:    MOVE.L      0xFFFFFFFF,D0
+            RTS
 
 **************************** FIN LEERCAR ********************************************************
-
 **************************** ESCCAR ************************************************************
 ESCCAR:  RTS
 
