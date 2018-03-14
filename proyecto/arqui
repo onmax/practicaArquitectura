@@ -38,7 +38,6 @@ IVR     EQU   	$effc19	      * de control auxiliar
 
 
 
-
 *CPIMR:  DC.B    0
 
 
@@ -61,33 +60,39 @@ INIT:
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
 
 
-        *Buffers*
-
-        *b_rba   DC.B    "HOLA MUNDO"
-        *b_rbb:  DC.B    "HOLA MUNDO"
-        *b_tba:  DC.B    "HOLA MUNDO"
-        *b_tbb:  DC.B    "HOLA MUNDO"
-
+        ********Buffers********
         ORG     $7FFF
-
         tam_bf  EQU     2000
+        tam_pt  EQU     4
 
-        b_rba:  DS.B    tam_bf
-        b_rbb:  DS.B    tam_bf
-        b_tba:  DS.B    tam_bf
-        b_tbb:  DS.B    tam_bf
-
+        bra:  DS.B    tam_bf
+        brb:  DS.B    tam_bf
+        bta:  DS.B    tam_bf
+        btb:  DS.B    tam_bf
 
         *Punteros
-        MOVE.L #BUS_RBA,RBA_IN_PUNT
-      	MOVE.L #BUS_RBA,RBA_EXT_PUNT
-      	MOVE.L #BUS_RBA,RBA_INT_PUNT
-      	MOVE.L #BUS_RBA,RBA_FIN_PUNT
-      	ADD.L  #$2000,RBA_FIN_PUNT
+        bra_i: DS.B   tam_pt
+        bra_f: DS.B   tam_pt
+        brb_i: DS.B   tam_pt
+        brb_f: DS.B   tam_pt
+        bta_i: DS.B   tam_pt
+        bta_f: DS.B   tam_pt
+        btb_i: DS.B   tam_pt
+        btb_f: DS.B   tam_pt
 
-        MOVE.L $10000, bfa_r_i
-        MOVE.L $10000, bfa_r_f
+        MOVE.L bra_i,bra
+        MOVE.L bra_f,bra
+        MOVE.L brb_i,brb
+        MOVE.L brb_f,brb
+        MOVE.L bta_i,bta
+        MOVE.L bta_f,bta
+        MOVE.L btb_i,btb
+        MOVE.L btb_f,btb
+        ***********************
+
+
         RTS
+
 **************************** FIN INIT *********************************************************
 
 
