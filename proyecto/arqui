@@ -4,14 +4,9 @@
         DC.L    $8000           * Pila
         DC.L    INICIO          * PC
 
-bfa_r:  ORG     $10000          * HOLA MUNDO
-        DC.B    "HOLA MUNDO"
-bfb_r:  ORG     $12000
-bfa_t:  ORG     $14000
-bfb_t:  ORG     $16000
 
 
-        ORG     $20000
+        ORG     $400
 
 * Definici?n de equivalencias
 ***************************************
@@ -25,7 +20,6 @@ CSRA    EQU     $effc03       * de seleccion de reloj A (escritura)
 CRA     EQU     $effc05       * de control A (escritura)
 TBA     EQU     $effc07       * buffer transmision A (escritura)
 RBA     EQU     $effc07       * buffer recepcion A  (lectura)
-ACR	    EQU   	$effc09	      * de control auxiliar
 
 ***Para B - Tabla pg.27***
 MR1B    EQU     $effc11       * de modo B (escritura)
@@ -37,44 +31,64 @@ RBB     EQU     $effc17       * buffer recepcion B  (lectura)
 TBB     EQU     $effc17       * buffer transmision B (escritura)
 
 *ambas. Ver tabla pg.37
+ACR	    EQU   	$effc09	      * de control auxiliar
 IMR     EQU     $effc0B       * de mascara de interrupcion A (escritura)
 ISR     EQU     $effc0B       * de estado de interrupcion A (lectura)
 IVR     EQU   	$effc19	      * de control auxiliar
 
 
-*Buffers
-tam_bf  EQU     2000
-
-bfa_r:  DS.B    tam_bf
-bfa_t:  DS.B    tam_bf
-bfb_r:  DS.B    tam_bf
-bfb_t:  DS.B    tam_bf
 
 
-*Punteros
-MOVE.L $10000, bfa_r_i
-MOVE.L $10000, bfa_r_F
-
-CPIMR:  DC.B    0
+*CPIMR:  DC.B    0
 
 
 
 **************************** INIT *************************************************************
 INIT:
-        *ivr a 16
-        *ivr && isr
         MOVE.B          #%00010000,CRA      * Reinicia el puntero MR1
-        MOVE.B          #%00000011,MR1A     * 8 bits por caracter.
+        MOVE.B          #%00000011,MR1A     * 8 bits por caracter y solicita interrupcion
+        MOVE.B          #%00000011,MR1B     * 8 bits por caracter y solicita interrupcion
         MOVE.B          #%00000000,MR2A     * Eco desactivado.
+        MOVE.B          #%00000000,MR2B     * Eco desactivado.
         MOVE.B          #%11001100,CSRA     * Velocidad = 38400 bps.
+        MOVE.B          #%11001100,CSRB     * Velocidad = 38400 bps.
         MOVE.B          #%00000000,ACR      * Velocidad = 38400 bps.
-        MOVE.B          #%00000101,CRA      * Transmision y recepcion activados.
+        MOVE.B          #%00000101,CRA      * Transmision y recepcion activados. Full Duplex.
+        MOVE.B          #%00000101,CRB      * Transmision y recepcion activados. Full Duplex.
+        MOVE.B          #%00000000,ISR      * Activar máscara de interrupcion (lectura)
+        MOVE.B          #%01000000,IVR      * Vector de interrupcion en 64 (decimal), 40(hexadecimal).
+                                            * RTI habría que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
+        **NOTA: Creemos que hay que ir cambiando ISR y IMR
+
+
+        *Buffers*
+
+        bfa_r:  ORG     $10000          * HOLA MUNDO
+                DC.B    "HOLA MUNDO"
+        bfb_r:  ORG     $12000
+        bfa_t:  ORG     $14000
+        bfb_t:  ORG     $16000
+
+
+        tam_bf  EQU     2000
+
+        bfa_r:  DS.B    tam_bf
+        bfa_t:  DS.B    tam_bf
+        bfb_r:  DS.B    tam_bf
+        bfb_t:  DS.B    tam_bf
+
+
+        *Punteros
+        MOVE.L $10000, bfa_r_i
+        MOVE.L $10000, bfa_r_f
         RTS
 **************************** FIN INIT *********************************************************
 
 
 
 
+**************************** RTI ************************************************************
+**************************** FIN RTI ********************************************************
 
 
 
@@ -90,15 +104,7 @@ PRINT:  RTS
 
 
 **************************** SCAN ************************************************************
-SCAN:       MOVE.B #10,D3		*Contador
-b_scan:	    BTST #0,SRA		*Comparamos el bit 0 (RxRDY) de SRA con 1, sin es != se va a fin
-            BNE fin
-            MOVE.B RBA,-(A7)	*Obtenemos el caracter y lo llevamos a pila
-            ADD D3,1		*Sumamos 1 al contador en cada iteracion
-            CMP #13,RBA		*Comparamos 13 con D0
-            BNE b_scan
-fin:	      DC.L $8000		*SP la dejamos igual
-	RTS
+SCAN:     RTS
 **************************** FIN SCAN ********************************************************
 
 
