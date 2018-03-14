@@ -122,15 +122,30 @@ SCAN:     RTS
 
 
 **************************** LEERCAR ************************************************************
-LEERCAR:   MOVE.L     bfa_r_i,D0
-	         BTST       #0, D0
-	         BEQ        LC_CERO	        *If it is equal to 0
-	         MOVE.B     D0, D1
-LIN.B:	   BTST       #1, D1	        *Buffer
-	         BEQ        RECEP
-           RTS
-LC_CERO:   MOVE.L     0xFFFFFFFF, D0
-	         RTS
+LEERCAR:    MOVE.L     (A7)+,D1         *Obtenemos de pila el buffer
+            MOVE.L     bra_i,D1
+            BTST       #0, D1
+            BEQ        LIN_B	           *Si el bit 0 es un 0
+LIN_A:      BTST       #1, D1            *Si el bit 1 es un 0
+            BEQ        LC_BRA
+            BSR        LC_BTA
+
+LIN_B:      BTST       #1, D1            *Si el bit 1 es un 0
+            BEQ        LC_BRB
+            BSR        LC_BTB
+
+
+******Buffer transmision A******
+LC_BTA:
+*******Buffer recepcion A*******
+LC_BRA:
+
+
+******Buffer transmision B******
+LC_BTB:
+*******Buffer recepcion B*******
+LC_BRB:
+
 
 
 **************************** FIN LEERCAR ********************************************************
