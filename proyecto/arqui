@@ -169,29 +169,33 @@ LIN_A:      BTST        #1,D1              *Se repite el mismo esquema que LIN_B
 
 
 
-******Buffer transmision A******            *cont_ta,bta_e,btb
-LC_BTA:     MOVE.L      cont_ta,A0         *Obtener direccion del contador
+******Buffer transmision A******           *cont_ta,bta_e,btb
+
+LC_BTA:     MOVE.L      cont_ta,A0         *Obtener direccion del contador 
+            MOVE.L      bta_e,A1           *Obtener puntero de extracción,que apunta al caracter a leer
+            MOVE.L      btb, A2            *La direccion de btb se pasa a A2
             MOVE.L      (A0),D1            *Obtener contenido del contador en D1
             CMP.L       #0,D1              *Comprobamos que el contador no sea 0 (.length en java),es decir,que no este vacio
-            BEQ         B_EMPTY             *Salto en caso de que este vacio
+            BEQ         B_EMPTY            *Salto en caso de que este vacio
             MOVE.L      bta_e,A1           *Obtener puntero de extracción,que apunta al caracter a leer
             MOVE.L      (A1),D0            *Metemos el carácter en D0
             MOVE.L      #0,(A1)+           *Ponemos la posicion liberada a null e incrementamos el puntero al siguiente caracter
             MOVE.L      A1,bta_e           *Actualizamos la posicion del puntero
             SUB.L       #1,D1              *Reducimos en 1 la cantidad de elementos en el buffer
             MOVE.L      D1,cont_ta         *Actualizamos el valor del contador
-            CMP.L         bta_e,btb          *Comprobamos si el puntero ha llegado al final del buffer
-            BEQ         BTA_INI             *En caso de que asi sea,toma el salto
+            CMP.L       A1,A2              *Comprobamos si el puntero ha llegado al final del buffer
+            BEQ         BTA_INI            *En caso de que asi sea,toma el salto
             RTS
-BTA_INI:    MOVE.L      #bta,bta_e          *Apuntamos bra_e a bta(principio del buffer)
+BTA_INI:    MOVE.L      #bta,bta_e         *Apuntamos bra_e a bta(principio del buffer)
             RTS
 
-*******Buffer recepcion A*******            *cont_ra,bra_e,brb
+*******Buffer recepcion A*******           *cont_ra,bra_e,brb
 LC_BRA:     MOVE.L      cont_ra,A0
+            MOVE.L      bra_e,A1
+            MOVE.L      brb, A2
             MOVE.L      (A0),D1
             CMP.L       #0,D1
-            BEQ         B_EMPTY
-            MOVE.L      bra_e,A1
+            BEQ         B_EMPTY  
             MOVE.L      (A1),D0
             MOVE.L      #0,(A1)+
             MOVE.L      A1,bra_e
