@@ -36,7 +36,7 @@
             *Transmisión 
             btb_i:          DS.B  4
             btb_e:          DS.B  4
-            btb_bas:        DS.B  4
+            btb_bas:        DS.B  4 
 
 * Definici?n de equivalencias
 ***************************************
