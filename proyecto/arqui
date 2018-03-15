@@ -4,9 +4,41 @@
         DC.L    $8000           * Pila
         DC.L    INICIO          * PC
 
-
-
         ORG     $400
+        
+        *Declaración de buffers
+        bra:    DS.B    2000
+        brb:    DS.B    2000
+        bta:    DS.B    2000
+        btb:    DS.B    2000
+
+        *Punteros de A
+
+            *Recepción
+            bra_i:      DS.B  4
+            bra_e:      DS.B  4
+            bra_f:      DS.B  4 
+            cont_ra:    Ds.B  4
+
+            *Transmisión
+            bta_i:      DS.B  4
+            bta_e:      DS.B  4
+            bta_f:      DS.B  4
+            cont_ta:    DS.B  4
+
+        *Punteros de B
+
+            *Recepción
+            brb_i:      DS.B  4
+            brb_e:      DS.B  4
+            brb_f:      DS.B  4
+            cont_rb:    DS.B  4
+            
+            *Transmisión 
+            btb_i:      DS.B  4
+            btb_e:      DS.B  4
+            btb_f:      DS.B  4
+            cont_tb:    DS.B  4
 
 * Definici?n de equivalencias
 ***************************************
@@ -31,10 +63,11 @@ RBB     EQU     $effc17       * buffer recepcion B  (lectura)
 TBB     EQU     $effc17       * buffer transmision B (escritura)
 
 *ambas. Ver tabla pg.37
-ACR	    EQU   	$effc09	      * de control auxiliar
+ACR     EQU     $effc09       * de control auxiliar
 IMR     EQU     $effc0B       * de mascara de interrupcion A (escritura)
 ISR     EQU     $effc0B       * de estado de interrupcion A (lectura)
-IVR     EQU   	$effc19	      * de control auxiliar
+IVR     EQU     $effc19       * de control auxiliar
+
 
 
 
@@ -59,40 +92,29 @@ INIT:
                                             * RTI habría que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
 
+        *INICIALIZACIÓN DE PUNTEROS
 
-        ********Buffers********
-        ORG     $7FFF
-        tam_bf  EQU     2000
-        tam_pt  EQU     4
+        MOVE.L  #bra, bra_i
+        MOVE.L  #bra, bra_e
+        MOVE.L  #$BCF, bra_f
+        MOVE.L  #0, cont_ra
 
-        bra:  DS.B    tam_bf
-        brb:  DS.B    tam_bf
-        bta:  DS.B    tam_bf
-        btb:  DS.B    tam_bf
+        MOVE.L  #bta, bta_i
+        MOVE.L  #bta, bta_e
+        MOVE.L  #$139F, bta_f
+        MOVE.L  #0, cont_ta
 
-        *Punteros
-        bra_i: DS.B   tam_pt
-        bra_f: DS.B   tam_pt
-        brb_i: DS.B   tam_pt
-        brb_f: DS.B   tam_pt
-        bta_i: DS.B   tam_pt
-        bta_f: DS.B   tam_pt
-        btb_i: DS.B   tam_pt
-        btb_f: DS.B   tam_pt
+        MOVE.L  #brb, brb_i
+        MOVE.L  #brb, btb_e
+        MOVE.L  #$1B6F, btb_f
+        MOVE.L  #0, cont_rb
 
-        MOVE.L bra_i,bra
-        MOVE.L bra_f,bra
-        MOVE.L brb_i,brb
-        MOVE.L brb_f,brb
-        MOVE.L bta_i,bta
-        MOVE.L bta_f,bta
-        MOVE.L btb_i,btb
-        MOVE.L btb_f,btb
-        ***********************
-
+        MOVE.L  #btb, btb_i
+        MOVE.L  #btb, btb_e
+        MOVE.L  #$233F, btb_f
+        MOVE.L  #0, cont_tb
 
         RTS
-
 **************************** FIN INIT *********************************************************
 
 
