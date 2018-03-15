@@ -5,7 +5,7 @@
         DC.L    INICIO          * PC
 
         ORG     $400
-        
+
         *Declaración de buffers
         bra:    DS.B    2000
         brb:    DS.B    2000
@@ -17,7 +17,7 @@
             *Recepción
             bra_i:      DS.B  4
             bra_e:      DS.B  4
-            bra_f:      DS.B  4 
+            bra_f:      DS.B  4
             cont_ra:    Ds.B  4
 
             *Transmisión
@@ -33,12 +33,15 @@
             brb_e:      DS.B  4
             brb_f:      DS.B  4
             cont_rb:    DS.B  4
-            
-            *Transmisión 
+
+            *Transmisión
             btb_i:      DS.B  4
             btb_e:      DS.B  4
             btb_f:      DS.B  4
             cont_tb:    DS.B  4
+
+        *Fin de buffers
+            fin_bff:      DS.B  4
 
 * Definici?n de equivalencias
 ***************************************
@@ -92,27 +95,31 @@ INIT:
                                             * RTI habría que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
 
-        *INICIALIZACIÓN DE PUNTEROS
+        *INICIALIZACION DE PUNTEROS
 
-        MOVE.L  #bra, bra_i
-        MOVE.L  #bra, bra_e
-        MOVE.L  #$BCF, bra_f
-        MOVE.L  #0, cont_ra
+        MOVE.L      #bra, bra_i
+        MOVE.L      #bra, bra_e
+        MOVE.L      #$BCF, bra_f
+        MOVE.L      #0, cont_ra
 
-        MOVE.L  #bta, bta_i
-        MOVE.L  #bta, bta_e
-        MOVE.L  #$139F, bta_f
-        MOVE.L  #0, cont_ta
+        MOVE.L      #bta, bta_i
+        MOVE.L      #bta, bta_e
+        MOVE.L      #$139F, bta_f
+        MOVE.L      #0, cont_ta
 
-        MOVE.L  #brb, brb_i
-        MOVE.L  #brb, btb_e
-        MOVE.L  #$1B6F, btb_f
-        MOVE.L  #0, cont_rb
+        MOVE.L      #brb, brb_i
+        MOVE.L      #brb, btb_e
+        MOVE.L      #$1B6F, btb_f
+        MOVE.L      #0, cont_rb
 
-        MOVE.L  #btb, btb_i
-        MOVE.L  #btb, btb_e
-        MOVE.L  #$233F, btb_f
-        MOVE.L  #0, cont_tb
+        MOVE.L      #btb, btb_i
+        MOVE.L      #btb, btb_e
+        MOVE.L      #$233F, btb_f
+        MOVE.L      #0, cont_tb
+
+
+        MOVE.L      #$2343, fin_bff
+
 
         RTS
 **************************** FIN INIT *********************************************************
@@ -146,67 +153,97 @@ SCAN:     RTS
 
 
 **************************** LEERCAR ************************************************************
-LEERCAR:    MOVE.L      D0,D1            *Obtenemos de pila el buffer
-            BTST        #0, D1           *Si el bit 0 == 0 --> Ir a linea A
-            BEQ         LIN_A            *EOC --> Ir a B
+LEERCAR:    MOVE.L      #0, A0              *Inicializamos a 0 --> A0
+            MOVE.L      #0, A1              *Inicializamos a 0 --> A1
+            MOVE.L      D0,D1               *Obtenemos de pila el buffer
+            BTST        #0, D1              *Si el bit 0 == 0 --> Ir a linea A
+            BEQ         LIN_A               *EOC --> Ir a B
 
-LIN_B:      BTST        #1, D1           *Si el bit 1 == 0 --> Ir a recepcion
-            BEQ         LC_BRB           *EOC --> Ir a transmision
+LIN_B:      BTST        #1, D1              *Si el bit 1 == 0 --> Ir a recepcion
+            BEQ         LC_BRB              *EOC --> Ir a transmision
             BSR         LC_BTB
 
-LIN_A:      BTST        #1, D1            *Se repite el mismo esquema que LIN_B
+LIN_A:      BTST        #1, D1              *Se repite el mismo esquema que LIN_B
             BEQ         LC_BRA
             BSR         LC_BTA
 
 
 
-******Buffer transmision A******
+******Buffer transmision A******            *cont_ta, bta_e, btb
 LC_BTA:     MOVE.L      cont_ta, A0         *Obtener direccion del contador
             MOVE.L      (A0), D1            *Obtener contenido del contador en D1
             CMP.L       #0, D1              *Comprobamos que el contador no sea 0 (.length en java), es decir, que no este vacio
-            BEQ         LC_CERO             *Salto en caso de que este vacio
+            BEQ         B_EMPTY             *Salto en caso de que este vacio
             MOVE.L      bta_e, A1           *Obtener puntero de extracción, que apunta al caracter a leer
-            MOVE.B      (A1), D0            *Metemos el carácter en D0 
+            MOVE.L      (A1), D0            *Metemos el carácter en D0
             MOVE.L      #0, (A1)+           *Ponemos la posicion liberada a null e incrementamos el puntero al siguiente caracter
             MOVE.L      A1, bta_e           *Actualizamos la posicion del puntero
             SUB.L       #1, D1              *Reducimos en 1 la cantidad de elementos en el buffer
             MOVE.L      D1, cont_ta         *Actualizamos el valor del contador
-            CMP         btb, bta_e          *Comprobamos si el puntero ha llegado al final del buffer
-            BEQ         BRA_E_IN            *En caso de que asi sea, toma el salto
+            CMP         bta_e, btb          *Comprobamos si el puntero ha llegado al final del buffer
+            BEQ         BTA_INI             *En caso de que asi sea, toma el salto
             RTS
-BRA_E_IN:   MOVE.L      bta, bta_e          *Apuntamos bra_e a bta(principio del buffer)
+BTA_INI:    MOVE.L      bta, bta_e          *Apuntamos bra_e a bta(principio del buffer)
             RTS
-*******Buffer recepcion A*******
-LC_BRA:     MOVE.B      bra_i, D1          *Lo mismo que LC_BTA
-            MOVE.B      bra_f, D2
-            CMP         D1, D2
-            BEQ         LC_CERO
-            MOVE.L      D1, LC_CHAR
-            MOVE.L      LC_CHAR, D0
+
+*******Buffer recepcion A*******            *cont_ra, bra_e, brb
+LC_BRA:     MOVE.L      cont_ra, A0
+            MOVE.L      (A0), D1
+            CMP.L       #0, D1
+            BEQ         B_EMPTY
+            MOVE.L      bra_e, A1
+            MOVE.L      (A1), D0
+            MOVE.L      #0, (A1)+
+            MOVE.L      A1, bra_e
+            SUB.L       #1, D1
+            MOVE.L      D1, cont_ra
+            CMP         bra_e, brb
+            BEQ         BRA_INI
+            RTS
+BRA_INI:    MOVE.L      bta, bra_e
+            RTS
 ********************************
 
 
-******Buffer transmision B******
-LC_BTB:     MOVE.B      btb_i, D1          *Lo mismo que LC_BTA
-            MOVE.B      btb_f, D2
-            CMP         D1, D2
-            BEQ         LC_CERO
-            MOVE.L      D1, LC_CHAR
-            MOVE.L      LC_CHAR, D0
-
-*******Buffer recepcion B*******
-LC_BRB:     MOVE.B      brb_i, D1          *Lo mismo que LC_BTA
-            MOVE.B      brb_f, D2
-            CMP         D1, D2
-            BEQ         LC_CERO
-            MOVE.L      D1, LC_CHAR
-            MOVE.L      LC_CHAR, D0
-********************************
-
-LC_CERO:    MOVE.L      0xFFFFFFFF,D0
+******Buffer transmision B******           *cont_tb, btb_e,fin_bff
+LC_BTB:     MOVE.L      cont_tb, A0
+            MOVE.L      (A0), D1
+            CMP.L       #0, D1
+            BEQ         B_EMPTY
+            MOVE.L      btb_e, A1
+            MOVE.L      (A1), D0
+            MOVE.L      #0, (A1)+
+            MOVE.L      A1, btb_e
+            SUB.L       #1, D1
+            MOVE.L      D1, cont_tb
+            CMP         btb_e, fin_bff
+            BEQ         BTA_INI
+            RTS
+BTA_INI:    MOVE.L      bta, bra_e
             RTS
 
+*******Buffer recepcion B*******           *cont_rb, brb_e,bta
+LC_BRB:     MOVE.L      cont_rb, A0
+            MOVE.L      (A0), D1
+            CMP.L       #0, D1
+            BEQ         B_EMPTY
+            MOVE.L      brb_e, A1
+            MOVE.L      (A1), D0
+            MOVE.L      #0, (A1)+
+            MOVE.L      A1, brb_e
+            SUB.L       #1, D1
+            MOVE.L      D1, cont_rb
+            CMP         brb_e, bta
+            BEQ         BRA_INI
+            RTS
+BRA_INI:    MOVE.L      bta, bra_e
+            RTS
+********************************
+
+B_EMPTY:    MOVE.L      #$FFFFFFFF,D0
+            RTS
 **************************** FIN LEERCAR ********************************************************
+
 **************************** ESCCAR ************************************************************
 ESCCAR:  RTS
 
