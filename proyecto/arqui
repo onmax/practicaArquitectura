@@ -228,7 +228,7 @@ FIN_B:      MOVE.L      bta,A3
             MOVE.L      A0,bta_escritura
             RTS
 
-LLENO:      #$ffffffff,D0
+LLENO:      MOVE.L      #$ffffffff,D0
             RTS      
 
 
