@@ -222,19 +222,14 @@ EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
 FIN_B:      MOVE.L      bta,A3
             MOVE.L      A3,D7
             CMP.L       D5,D7
-            BEQ         LLENO1
+            BEQ         LLENO
             MOVE.L      D7,D4
             MOVE.L      D4,A0
             MOVE.L      A0,bta_escritura
             RTS
 
 LLENO:      #$ffffffff,D0
-            RTS
-
-LLENO1:     #$ffffffff,D0
-            RTS  
-
-
+            RTS      
 
 
 *******Buffer recepcion A*******
