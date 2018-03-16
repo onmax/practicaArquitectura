@@ -72,18 +72,18 @@ IVR     EQU     $effc19       * de control auxiliar
 
 **************************** INIT *************************************************************
 INIT:
-        MOVE.B          #%00010000,CRA      * Reinicia el puntero MR1
-        MOVE.B          #%00000011,MR1A     * 8 bits por caracter y solicita interrupcion
-        MOVE.B          #%00000011,MR1B     * 8 bits por caracter y solicita interrupcion
-        MOVE.B          #%00000000,MR2A     * Eco desactivado.
-        MOVE.B          #%00000000,MR2B     * Eco desactivado.
-        MOVE.B          #%11001100,CSRA     * Velocidad = 38400 bps.
-        MOVE.B          #%11001100,CSRB     * Velocidad = 38400 bps.
-        MOVE.B          #%00000000,ACR      * Velocidad = 38400 bps.
-        MOVE.B          #%00000101,CRA      * Transmision y recepcion activados. Full Duplex.
-        MOVE.B          #%00000101,CRB      * Transmision y recepcion activados. Full Duplex.
-        MOVE.B          #%00000000,ISR      * Activar máscara de interrupcion (lectura)
-        MOVE.B          #%01000000,IVR      * Vector de interrupcion en 64 (decimal), 40(hexadecimal).
+        *MOVE.B          #%00010000,CRA      * Reinicia el puntero MR1
+        *MOVE.B          #%00000011,MR1A     * 8 bits por caracter y solicita interrupcion
+        *MOVE.B          #%00000011,MR1B     * 8 bits por caracter y solicita interrupcion
+        *MOVE.B          #%00000000,MR2A     * Eco desactivado.
+        *MOVE.B          #%00000000,MR2B     * Eco desactivado.
+        *MOVE.B          #%11001100,CSRA     * Velocidad = 38400 bps.
+        *MOVE.B          #%11001100,CSRB     * Velocidad = 38400 bps.
+        *MOVE.B          #%00000000,ACR      * Velocidad = 38400 bps.
+        *MOVE.B          #%00000101,CRA      * Transmision y recepcion activados. Full Duplex.
+        *MOVE.B          #%00000101,CRB      * Transmision y recepcion activados. Full Duplex.
+        *MOVE.B          #%00000000,ISR      * Activar máscara de interrupcion (lectura)
+        *MOVE.B          #%01000000,IVR      * Vector de interrupcion en 64 (decimal), 40(hexadecimal).
                                             * RTI habría que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
 
