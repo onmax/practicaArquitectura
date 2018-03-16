@@ -191,16 +191,16 @@ ESCCAR:     MOVE.L      D0,D2           *Buffer a D2
             BEQ         E_LIN_A            *EOC --> Ir a B
 
             BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
-            BEQ         LC_BRB           *EOC --> Ir a transmision
-            BSR         LC_BTB
+            BEQ         EC_BRB           *EOC --> Ir a transmision
+            BSR         EC_BTB
 
-E_LIN_A:      BTST        #1,D2            *Se repite el mismo esquema que LIN_B
-            BEQ         LC_BRA
-            BSR         LC_BTA
+E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
+            BEQ         EC_BRA
+            BSR         EC_BTA
 
 
 ******Buffer transmision A******
-LC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
+EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      A0,D4
             MOVE.L      bta_lectura,A1      *Puntero de lectura -> A1
             MOVE.L      A1,D5
@@ -233,14 +233,14 @@ LLENO:      #$ffffffff,D0
 
 
 *******Buffer recepcion A*******
-LC_BRA:     RTS
+EC_BRA:     RTS
 ********************************
 
 ******Buffer transmision B******
-LC_BTB:     RTS
+EC_BTB:     RTS
 
 *******Buffer recepcion B*******
-LC_BRB:     RTS
+EC_BRB:     RTS
 ********************************
 
 
