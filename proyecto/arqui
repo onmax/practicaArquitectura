@@ -5,12 +5,11 @@
         DC.L    INICIO          * PC
 
         ORG     $400
-        tam_bf  EQU     5
         *Declaración de buffers
-        bra:    DS.B    tam_bf
-        brb:    DS.B    tam_bf
-        bta:    DS.B    tam_bf
-        btb:    DS.B    tam_bf
+        bra:    DS.B    5
+        brb:    DS.B    5
+        bta:    DS.B    5
+        btb:    DS.B    5
 
         *Punteros de A
 
@@ -145,13 +144,13 @@ LEERCAR:    MOVE.L      #0,A0              *Inicializamos a 0 --> A0
             MOVE.L      #0,A1              *Inicializamos a 0 --> A1
             MOVE.L      D0,D1               *Obtenemos de pila el buffer
             BTST        #0,D1              *Si el bit 0 == 0 --> Ir a linea A
-            BEQ         LIN_A               *EOC --> Ir a B
+            BEQ         L_LIN_A               *EOC --> Ir a B
 
-LIN_B:      BTST        #1,D1              *Si el bit 1 == 0 --> Ir a recepcion
+            BTST        #1,D1              *Si el bit 1 == 0 --> Ir a recepcion
             BEQ         LC_BRB              *EOC --> Ir a transmision
             BSR         LC_BTB
 
-LIN_A:      BTST        #1,D1              *Se repite el mismo esquema que LIN_B
+L_LIN_A:      BTST        #1,D1              *Se repite el mismo esquema que LIN_B
             BEQ         LC_BRA
             BSR         LC_BTA
 
@@ -189,13 +188,13 @@ ESCCAR:     MOVE.L      D0,D2           *Buffer a D2
             MOVE.L      #0,A0           *A0 a cero
             MOVE.L      #0,A1           *A1 a cero
             BTST        #0,D2           *Si el bit 0 == 0 --> Ir a linea A
-            BEQ         LIN_A            *EOC --> Ir a B
+            BEQ         E_LIN_A            *EOC --> Ir a B
 
-LIN_B:      BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
+            BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
             BEQ         LC_BRB           *EOC --> Ir a transmision
             BSR         LC_BTB
 
-LIN_A:      BTST        #1,D2            *Se repite el mismo esquema que LIN_B
+E_LIN_A:      BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             BEQ         LC_BRA
             BSR         LC_BTA
 
