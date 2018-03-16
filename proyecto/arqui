@@ -5,7 +5,7 @@
         DC.L    INICIO          * PC
 
         ORG     $400
-        tam_bf  EQU     #5
+        tam_bf  EQU     5
         *Declaración de buffers
         bra:    DS.B    tam_bf
         brb:    DS.B    tam_bf
@@ -90,24 +90,24 @@ INIT:
 
         *INICIALIZACIÓN DE PUNTEROS
 
-        MOVE.L  #bra, bra_escritura
-        MOVE.L  #bra, bra_lectura
-        MOVE.L  #$404, bra_fin
+        MOVE.L  #bra,bra_escritura
+        MOVE.L  #bra,bra_lectura
+        MOVE.L  #$404,bra_fin
         
 
-        MOVE.L  #bta, bta_escritura
-        MOVE.L  #bta, bta_lectura
-        MOVE.L  #$409, bta_fin
+        MOVE.L  #bta,bta_escritura
+        MOVE.L  #bta,bta_lectura
+        MOVE.L  #$409,bta_fin
         
 
-        MOVE.L  #brb, brb_escritura
-        MOVE.L  #brb, btb_lectura
-        MOVE.L  #$40e, brb_fin
+        MOVE.L  #brb,brb_escritura
+        MOVE.L  #brb,btb_lectura
+        MOVE.L  #$40e,brb_fin
         
 
-        MOVE.L  #btb, btb_escritura
-        MOVE.L  #btb, btb_lectura
-        MOVE.L  #$413, btb_fin
+        MOVE.L  #btb,btb_escritura
+        MOVE.L  #btb,btb_lectura
+        MOVE.L  #$413,btb_fin
         
 
         RTS
@@ -159,82 +159,28 @@ LIN_A:      BTST        #1,D1              *Se repite el mismo esquema que LIN_B
 
 ******Buffer transmision A******           
 
-LC_BTA:     MOVE.L      cont_ta,A0         *Obtener direccion del contador 
-            MOVE.L      bta_e,A1           *Obtener puntero de extracción,que apunta al caracter a leer
-            MOVE.L      btb,A2            *La direccion de btb se pasa a A2
-            MOVE.L      (A0),D1            *Obtener contenido del contador en D1
-            CMP.L       #0,D1              *Comprobamos que el contador no sea 0 (.length en java),es decir,que no este vacio
-            BEQ         B_EMPTY            *Salto en caso de que este vacio
-            MOVE.L      bta_e,A1           *Obtener puntero de extracción,que apunta al caracter a leer
-            MOVE.L      (A1),D0            *Metemos el carácter en D0
-            MOVE.L      #0,(A1)+           *Ponemos la posicion liberada a null e incrementamos el puntero al siguiente caracter
-            MOVE.L      A1,bta_e           *Actualizamos la posicion del puntero
-            SUB.L       #1,D1              *Reducimos en 1 la cantidad de elementos en el buffer
-            MOVE.L      D1,cont_ta         *Actualizamos el valor del contador
-            CMP.L       A1,A2              *Comprobamos si el puntero ha llegado al final del buffer
-            BEQ         BTA_INI            *En caso de que asi sea,toma el salto
-            RTS
-BTA_INI:    MOVE.L      #bta,bta_e         *Apuntamos bra_e a bta(principio del buffer)
+LC_BTA:    
             RTS
 
 *******Buffer recepcion A*******           
-LC_BRA:     MOVE.L      cont_ra,A0
-            MOVE.L      bra_e,A1
-            MOVE.L      brb, A2
-            MOVE.L      (A0),D1
-            CMP.L       #0,D1
-            BEQ         B_EMPTY  
-            MOVE.L      (A1),D0
-            MOVE.L      #0,(A1)+
-            MOVE.L      A1,bra_e
-            SUB.L       #1,D1
-            MOVE.L      D1,cont_ra
-            CMP.L       bra_e,brb
-            BEQ         BRA_INI
-            RTS
-BRA_INI:    MOVE.L      #bta,bra_e
+LC_BRA:     
             RTS
 ********************************
 
 
 ******Buffer transmision B******           
-LC_BTB:     MOVE.L      cont_tb,A0
-            MOVE.L      (A0),D1
-            CMP.L       #0,D1
-            BEQ         B_EMPTY
-            MOVE.L      btb_e,A1
-            MOVE.L      (A1),D0
-            MOVE.L      #0,(A1)+
-            MOVE.L      A1,btb_e
-            SUB.L       #1,D1
-            MOVE.L      D1,cont_tb
-            CMP.L       btb_e,fin_bff
-            BEQ         BTB_INI
-            RTS
-BTB_INI:    MOVE.L      #bta,bra_e
+LC_BTB:     
             RTS
 
 *******Buffer recepcion B*******           
-LC_BRB:     MOVE.L      cont_rb,A0
-            MOVE.L      (A0),D1
-            CMP.L       #0,D1
-            BEQ         B_EMPTY
-            MOVE.L      brb_e,A1
-            MOVE.L      (A1),D0
-            MOVE.L      #0,(A1)+
-            MOVE.L      A1,brb_e
-            SUB.L       #1,D1
-            MOVE.L      D1,cont_rb
-            CMP.L       brb_e,bta
-            BEQ         BRB_INI
-            RTS
-BRB_INI:    MOVE.L      #bta,bra_e
+LC_BRB:     
             RTS
 ********************************
 
-B_EMPTY:    MOVE.L      #$FFFFFFFF,D0
-            RTS
+
 **************************** FIN LEERCAR ********************************************************
+
+
 
 **************************** ESCCAR ************************************************************
 ESCCAR:     MOVE.L      D0,D2           *Buffer a D2
@@ -287,58 +233,17 @@ LLENO:      #$ffffffff,D0
             RTS      
 
 
-
-
-            SUB.L       D5,D4               *Escritura - lectura
-            CMP         #0,D4               *Si = 0, caso de buffer lleno o vacio
-            BEQ         CAS_ESP             *Dicho caso se trata en CAS_ESP
-ESCRIB:     MOVE.L      D3,(A0)+            *Escribimos el carcater en el buffer y postincremento del puntero de escritura
-            CMP.L       A2,A0               *Comprobamos si el puntero apunta a basura(el final)
-            BEQ         VUELTA              *Si apunta, el puntero vuelve al principio
-            MOVE.L      A0,bra_escritura    *Se actualiza el puntero de escritura
-            RTS
-VUELTA:     MOVE.L      bra,A3              *A3 <- Puntero inicio 
-            MOVE.L      A3,A0               *
-            MOVE.L      A0,bra_escritura
-            MOVE.L      #1,(A2)
-            RTS
-CAS_ESP:    CMP.L       (A2),#1
-            BNE         ESCRIB 
-            MOVE.L      #$FFFFFFFF,D0
-            RTS       
 *******Buffer recepcion A*******
-LC_BRA:     MOVE.B      bra_i, D1           *Lo mismo que LC_BTA
-            MOVE.B      bra_f, D2
-            CMP         D1, D2
-            BEQ         LC_CERO
-            MOVE.L      D1, LC_CHAR
-            MOVE.L      LC_CHAR, D0
+LC_BRA:     RTS
 ********************************
-
 
 ******Buffer transmision B******
-LC_BTB:     MOVE.B      btb_i, D1          *Lo mismo que LC_BTA
-            MOVE.B      btb_f, D2
-            CMP         D1, D2
-            BEQ         LC_CERO
-            MOVE.L      D1, LC_CHAR
-            MOVE.L      LC_CHAR, D0
+LC_BTB:     RTS
 
 *******Buffer recepcion B*******
-LC_BRB:     MOVE.B      brb_i, D1          *Lo mismo que LC_BTA
-            MOVE.B      brb_f, D2
-            CMP         D1, D2
-            BEQ         LC_CERO
-            MOVE.L      D1, LC_CHAR
-            MOVE.L      LC_CHAR, D0
+LC_BRB:     RTS
 ********************************
 
-LC_LLENO:   MOVE.L      #$FFFFFFFF,D0
-            RTS
-
-
-
-ESCCAR:  RTS
 
 **************************** FIN ESCCAR ********************************************************
 
