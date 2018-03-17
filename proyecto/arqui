@@ -161,7 +161,7 @@ VACIO:      MOVE.L      #$ffffffff,D0
 **************************** LEECAR ************************************************************
 LEECAR:   MOVE.L      D0,D2           *Buffer a D2
           BTST        #0,D2           *Si el bit 0 == 0 --> Ir a linea A
-          BEQ         L_LIN_A         *EOC --> Ir a B
+          BEQ         LC_LIN_A         *EOC --> Ir a B
 
           BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
           BEQ         LC_BRB          *EOC --> Ir a transmision
@@ -188,7 +188,7 @@ LEECAR:   MOVE.L      D0,D2           *Buffer a D2
             LBTB_BF:    MOVE.L      #btb,btb_lectura    *Nueva posicion del puntero de lectura -> A0 (inicio)
                         RTS
 
-L_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
+LC_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             BEQ         LC_BRA
 
             ******Buffer transmision A**************
