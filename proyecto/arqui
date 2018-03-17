@@ -158,23 +158,42 @@ VACIO:      MOVE.L      #$ffffffff,D0
             RTS
 
 
-**************************** LEERCAR ************************************************************
-LEERCAR:    MOVE.L      D0,D2           *Buffer a D2
+**************************** LEECAR ************************************************************
+LEECAR:    MOVE.L      D0,D2           *Buffer a D2
             MOVE.L      #0,D3           *D3 a cero
             MOVE.B      D1,D3           *Caracter a D3
             MOVE.L      #0,A0           *A0 a cero
             MOVE.L      #0,A1           *A1 a cero
             BTST        #0,D2           *Si el bit 0 == 0 --> Ir a linea A
-            BEQ         E_LIN_A            *EOC --> Ir a B
+            BEQ         L_LIN_A            *EOC --> Ir a B
 
             BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
-            BEQ         EC_BRB           *EOC --> Ir a transmision
+            BEQ         LC_BRB           *EOC --> Ir a transmision
 
             ******Buffer transmision B**************
-            LC_BTB:
+            LC_BTB:     MOVE.L      btb_lectura,A0     *Puntero de lectura -> A0
+                        MOVE.L      A0,D4
+                        MOVE.L      btb_escritura,A1   *Puntero de escritura -> A1
+                        MOVE.L      A1,D5
+                        CMP.L       D4,D5              *Comparamos si lectura y escritura apuntan al mismo sitio (vacio)
+                        BEQ         VACIO
 
-E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
-            BEQ         EC_BRA
+                        MOVE.B      (A0),D0            *Leemos el dato
+                        MOVE.L      btb_fin,A2         *Puntero de fin -> A2
+                        MOVE.L      A2,D6
+                        CMP.L       D6,D4              *Comparamos si el puntero de lectura esta en el final
+                        BEQ         LBTB_BF
+
+                        ADD.L       #1,D4               *Puntero de lectura + 1
+                        MOVE.L      D4,A0               *Nueva posicion del puntero de lectura -> A0
+                        MOVE.L      A0,btb_lectura      *Actualizamos el puntero
+                        RTS
+
+            LBTB_BF:    MOVE.L      #btb,btb_lectura    *Nueva posicion del puntero de lectura -> A0 (inicio)
+                        RTS
+
+L_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
+            BEQ         LC_BRA
 
             ******Buffer transmision A**************
             LC_BTA:
@@ -188,7 +207,7 @@ LC_BRA:
 LC_BRB:
 
 
-**************************** FIN LEERCAR ********************************************************
+**************************** FIN LEECAR ********************************************************
 
 
 LLENO:      MOVE.L      #$ffffffff,D0
@@ -204,7 +223,7 @@ ESCCAR:     MOVE.L      D0,D2           *Buffer a D2
 
             BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
             BEQ         EC_BRB          *EOC --> Ir a transmision
-    
+
     ******Buffer transmision B**************
             MOVE.L      btb_escritura,A0
             MOVE.L      A0,D4
@@ -240,7 +259,7 @@ BTB_FB:     MOVE.L      #btb,A3
 
 E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             BEQ         EC_BRA
-            
+
     ******Buffer transmision A**************
             MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      A0,D4
@@ -355,70 +374,43 @@ LINEA:  RTS
 INICIO:     BSR             INIT                 * Inicia el controlador
 
 
-            **Buffer 02***bta
-            MOVE.L          #2,D0
-            MOVE.L          #97,D1
-            BSR             ESCCAR
-
-            *Buffer 01***brb
-            MOVE.L          #1,D0
-            MOVE.L          #151,D1
-            BSR             ESCCAR
-
-
-            ***Buffer 00***bra
-            MOVE.L          #0,D0
-            MOVE.L          #152,D1
-            BSR             ESCCAR
-
-            MOVE.L          #0,D0
-            MOVE.L          #153,D1
-            BSR             ESCCAR
-
-            **Buffer 02***bta
-            MOVE.L          #2,D0
-            MOVE.L          #153,D1
-            BSR             ESCCAR
-
-            **Buffer 03***btb
             MOVE.L          #3,D0
-            MOVE.L          #155,D1
+            MOVE.L          #157,D1
             BSR             ESCCAR
+            MOVE.L          #3,D0
+            BSR             LEECAR
 
-            **Buffer 00***bra
-            MOVE.L          #0,D0
-            MOVE.L          #156,D1
+
+            MOVE.L          #3,D0
+            MOVE.L          #158,D1
             BSR             ESCCAR
+            MOVE.L          #3,D0
+            BSR             LEECAR
 
-            **Buffer 01***brb
-            MOVE.L          #1,D0
+            MOVE.L          #3,D0
+            MOVE.L          #158,D1
+            BSR             ESCCAR
+            MOVE.L          #3,D0
+            MOVE.L          #158,D1
+            BSR             ESCCAR
+            MOVE.L          #3,D0
             MOVE.L          #158,D1
             BSR             ESCCAR
 
-            **Buffer 03***btb
             MOVE.L          #3,D0
-            MOVE.L          #157,D1
-            BSR             ESCCAR
+            BSR             LEECAR
+            MOVE.L          #3,D0
+            BSR             LEECAR
+            MOVE.L          #3,D0
+            BSR             LEECAR
+            MOVE.L          #3,D0
+            BSR             LEECAR
 
-            **Buffer 03***btb
-            MOVE.L          #3,D0
             MOVE.L          #161,D1
             BSR             ESCCAR
+            MOVE.L          #3,D0
+            BSR             LEECAR
 
-            **Buffer 00***bra
-            MOVE.L          #0,D0
-            MOVE.L          #156,D1
-            BSR             ESCCAR
-
-            **Buffer 02***bta
-            MOVE.L          #2,D0
-            MOVE.L          #162,D1
-            BSR             ESCCAR
-
-            **Buffer 00***bta
-            MOVE.L          #0,D0
-            MOVE.L          #157,D1
-            BSR             ESCCAR
 
             BREAK
 **************************** FIN PROGRAMA PRINCIPAL ******************************************
