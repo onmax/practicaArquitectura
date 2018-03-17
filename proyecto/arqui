@@ -215,6 +215,7 @@ EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
 
             MOVE.L      D7,A0               *Nueva posicion del puntero de escritura -> A0
             MOVE.L      A0,bta_escritura    *Actualizamos el puntero
+            MOVE.L      #0,D0               *Se devuelve 0 en D0 al haber escrito el caracter correctamente
             RTS
 
 FIN_B:      MOVE.L      bta,A3
@@ -224,6 +225,7 @@ FIN_B:      MOVE.L      bta,A3
             MOVE.L      D7,D4
             MOVE.L      D4,A0
             MOVE.L      A0,bta_escritura
+            MOVE.L      #0,D0               *Se devuelve 0 en D0 al haber escrito el caracter correctamente
             RTS
 
 LLENO:      MOVE.L      #$ffffffff,D0
