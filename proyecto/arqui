@@ -97,7 +97,7 @@ INIT:
         MOVE.L  #brb,btb_lectura
         MOVE.L  #$409,brb_fin
 
-        MOVE.L  #bta,bta_escritura
+        MOVE.L  #bta,bta_escritura      *bta_escritura apunta donde apunta bta
         MOVE.L  #bta,bta_lectura
         MOVE.L  #$40e,bta_fin
         
@@ -198,7 +198,7 @@ E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
 
 
 ******Buffer transmision A******
-EC_BTA:     MOVE.L      #bta_escritura,A0    *Puntero de escritura -> A0
+EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      A0,D4
             MOVE.L      bta_lectura,A1      *Puntero de lectura -> A1
             MOVE.L      A1,D5
