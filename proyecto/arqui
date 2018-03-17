@@ -170,27 +170,27 @@ LEECAR:    MOVE.L      D0,D2           *Buffer a D2
             BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
             BEQ         LC_BRB           *EOC --> Ir a transmision
 
-            ******Buffer transmision B**************
-            LC_BTB:     MOVE.L      btb_lectura,A0     *Puntero de lectura -> A0
-                        MOVE.L      A0,D4
-                        MOVE.L      btb_escritura,A1   *Puntero de escritura -> A1
-                        MOVE.L      A1,D5
-                        CMP.L       D4,D5              *Comparamos si lectura y escritura apuntan al mismo sitio (vacio)
-                        BEQ         VACIO
+           ******Buffer transmision B**************
+            MOVE.L      btb_lectura,A0      *Puntero de lectura -> A0
+            MOVE.L      A0,D4               *Direccion a la que apunta el puntero -> D4
+            MOVE.L      btb_escritura,A1    *Puntero de escritura -> A1
+            MOVE.L      A1,D5               *Direccion a la que apunta el puntero -> D5
+            CMP.L       D4,D5               *Comprobamos si lectura = escritura
+            BEQ         VACIO               *Si esta vacio, se toma el salto
+            
+            MOVE.B      (A0),D0             *Caracter leido -> D0
+            MOVE.L      btb_fin,A2          *Puntero de fin -> A2
+            MOVE.L      A2,D6               *Direccion a la que apunta el puntero -> D6
+            CMP.L       D4,D6               *Comprobamos si lectura = fin
+            BEQ         LBTB_BF             *Si esta en el final, se toma el salto
+            
+            ADD.L       #1,D4               *Se aumenta en 1 la direccion de lectura
+            MOVE.L      D4,A0               *Direccion actualizada -> A0
+            MOVE.L      A0,btb_lectura      *Se actualiza el puntero
+            RTS            
 
-                        MOVE.B      (A0),D0            *Leemos el dato
-                        MOVE.L      btb_fin,A2         *Puntero de fin -> A2
-                        MOVE.L      A2,D6
-                        CMP.L       D6,D4              *Comparamos si el puntero de lectura esta en el final
-                        BEQ         LBTB_BF
-
-                        ADD.L       #1,D4               *Puntero de lectura + 1
-                        MOVE.L      D4,A0               *Nueva posicion del puntero de lectura -> A0
-                        MOVE.L      A0,btb_lectura      *Actualizamos el puntero
-                        RTS
-
-            LBTB_BF:    MOVE.L      #btb,btb_lectura    *Nueva posicion del puntero de lectura -> A0 (inicio)
-                        RTS
+LBTB_BF:    MOVE.L      #btb,btb_lectura
+            RTS
 
 L_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             BEQ         LC_BRA
