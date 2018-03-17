@@ -5,7 +5,7 @@
         DC.L    INICIO          * PC
 
         ORG     $400
-        *Declaración de buffers
+        *Declaraci?n de buffers
         bra:    DS.B    5
         brb:    DS.B    5
         bta:    DS.B    5
@@ -13,26 +13,26 @@
 
         *Punteros de A
 
-            *Recepción
+            *Recepci?n
             bra_escritura:          DS.B  4
             bra_lectura:            DS.B  4
             bra_fin:                DS.B  4 
 
 
-            *Transmisión
+            *Transmisi?n
             bta_escritura:          DS.B  4
             bta_lectura:            DS.B  4
             bta_fin:                DS.B  4 
 
         *Punteros de B
 
-            *Recepción
+            *Recepci?n
             brb_escritura:          DS.B  4
             brb_lectura:            DS.B  4
             brb_fin:                DS.B  4
             
             
-            *Transmisión 
+            *Transmisi?n 
             btb_escritura:          DS.B  4
             btb_lectura:            DS.B  4
             btb_fin:                DS.B  4
@@ -82,12 +82,12 @@ INIT:
         *MOVE.B          #%00000000,ACR      * Velocidad = 38400 bps.
         *MOVE.B          #%00000101,CRA      * Transmision y recepcion activados. Full Duplex.
         *MOVE.B          #%00000101,CRB      * Transmision y recepcion activados. Full Duplex.
-        *MOVE.B          #%00000000,ISR      * Activar máscara de interrupcion (lectura)
+        *MOVE.B          #%00000000,ISR      * Activar m?scara de interrupcion (lectura)
         *MOVE.B          #%01000000,IVR      * Vector de interrupcion en 64 (decimal), 40(hexadecimal).
-                                            * RTI habría que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
+                                            * RTI habr?a que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
 
-        *INICIALIZACIÓN DE PUNTEROS
+        *INICIALIZACI?N DE PUNTEROS
 
         MOVE.L  #bra,bra_escritura
         MOVE.L  #bra,bra_lectura
@@ -98,7 +98,7 @@ INIT:
         MOVE.L  #$409,brb_fin
 
         MOVE.L  #bta,bta_escritura      *bta_escritura apunta donde apunta bta
-        MOVE.L  #bta,bta_lectura
+        MOVE.L  #$40b,bta_lectura
         MOVE.L  #$40e,bta_fin
         
 
@@ -205,7 +205,7 @@ EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      bta_fin,A2          *Puntero de fin -> A2
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)             *Se escribe el caracter en el buffer
-            CMP.L       D4,D6               *¿Escritura = FIN?
+            CMP.L       D4,D6               *?Escritura = FIN?
             BEQ         FIN_B
 
             MOVE.L      A0,D7               *Puntero de escritura -> D7
@@ -261,10 +261,8 @@ LINEA:  RTS
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR             INIT                 * Inicia el controlador
 B_PRUEBAS:  MOVE.L          #2,D0
-            MOVE.L          #97,D1
+  	    MOVE.L          #97,D1
             BSR             ESCCAR               * Recibe la linea
             BSR             B_PRUEBAS
             BREAK
-**************************** FIN PROGRAMA PRINCIPAL ******************************************
-
- 
+**************************** FIN PROGRAMA PRINCIPAL ******************************************    
