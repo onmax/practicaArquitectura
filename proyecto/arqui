@@ -87,6 +87,9 @@ INIT:
                                             * RTI habra que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
 
+        MOVE.L  #TAM_B,D0
+        SUB.L   #1,D0
+
         *INICIALIZACION DE PUNTEROS
 
         MOVE.L  #bra,bra_escritura
@@ -200,22 +203,50 @@ VACIO:      MOVE.L      #$ffffffff,D0
 ESCCAR:     MOVE.L      D0,D2           *Buffer a D2
             MOVE.L      #0,D3           *D3 a cero
             MOVE.B      D1,D3           *Caracter a D3
-            MOVE.L      #0,A0           *A0 a cero
-            MOVE.L      #0,A1           *A1 a cero
             BTST        #0,D2           *Si el bit 0 == 0 --> Ir a linea A
-            BEQ         E_LIN_A            *EOC --> Ir a B
+            BEQ         E_LIN_A         *EOC --> Ir a B
 
             BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
-            BEQ         EC_BRB           *EOC --> Ir a transmision
-            BSR         EC_BTB
+            BEQ         EC_BRB          *EOC --> Ir a transmision
+    
+    ******Buffer transmision B**************
+            MOVE.L      btb_escritura,A0
+            MOVE.L      A0,D4
+            MOVE.L      btb_lectura,A1
+            MOVE.L      A1,D5
+            MOVE.L      btb_fin,A2
+            MOVE.L      A2,D6
+            MOVE.B      D3,(A0)
+            CMP.L       D4,D6
+            BEQ         BTB_FB
+
+            MOVE.L      A0,D7
+            ADD.L       #1,D7
+            CMP.L       D7,D5
+            BEQ         LLENO
+
+            MOVE.L      D7,A0
+            MOVE.L      A0,btb_escritura
+            MOVE.L      #0,D0
+            RTS
+
+BTB_FB:     MOVE.L      #btb,A3
+            MOVE.L      A3,D7
+            CMP.L       D5,D7
+            BEQ         LLENO
+            MOVE.L      D7,D4
+            MOVE.L      D4,A0
+            MOVE.L      A0,btb_escritura
+            MOVE.L      #0,D0
+            RTS
+
+
 
 E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             BEQ         EC_BRA
-            BSR         EC_BTA
-
-
-******Buffer transmision A**************
-EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
+            
+    ******Buffer transmision A**************
+            MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      A0,D4
             MOVE.L      bta_lectura,A1      *Puntero de lectura -> A1
             MOVE.L      A1,D5
@@ -276,36 +307,7 @@ BRA_FB:     MOVE.L      #bra,A3
             MOVE.L      #0,D0
             RTS
 
-******Buffer transmision B**************
-EC_BTB:     MOVE.L      btb_escritura,A0
-            MOVE.L      A0,D4
-            MOVE.L      btb_lectura,A1
-            MOVE.L      A1,D5
-            MOVE.L      btb_fin,A2
-            MOVE.L      A2,D6
-            MOVE.B      D3,(A0)
-            CMP.L       D4,D6
-            BEQ         BTB_FB
 
-            MOVE.L      A0,D7
-            ADD.L       #1,D7
-            CMP.L       D7,D5
-            BEQ         LLENO
-
-            MOVE.L      D7,A0
-            MOVE.L      A0,bra_escritura
-            MOVE.L      #0,D0
-            RTS
-
-BTB_FB:    MOVE.L      #btb,A3
-            MOVE.L      A3,D7
-            CMP.L       D5,D7
-            BEQ         LLENO
-            MOVE.L      D7,D4
-            MOVE.L      D4,A0
-            MOVE.L      A0,btb_escritura
-            MOVE.L      #0,D0
-            RTS
 
 *******Buffer recepcion B***************
 EC_BRB:     MOVE.L      brb_escritura,A0
@@ -359,16 +361,16 @@ INICIO:     BSR             INIT                 * Inicia el controlador
 
             **Buffer 02***bta
             MOVE.L          #2,D0
-      	    MOVE.L          #97,D1
+            MOVE.L          #97,D1
             BSR             ESCCAR
 
-            **Buffer 01***brb
+            *Buffer 01***brb
             MOVE.L          #1,D0
             MOVE.L          #151,D1
             BSR             ESCCAR
 
 
-            **Buffer 00***bra
+            ***Buffer 00***bra
             MOVE.L          #0,D0
             MOVE.L          #152,D1
             BSR             ESCCAR
@@ -379,12 +381,12 @@ INICIO:     BSR             INIT                 * Inicia el controlador
 
             **Buffer 02***bta
             MOVE.L          #2,D0
-      	    MOVE.L          #153,D1
+            MOVE.L          #153,D1
             BSR             ESCCAR
 
             **Buffer 03***btb
-            MOVE.L          #2,D0
-      	    MOVE.L          #155,D1
+            MOVE.L          #3,D0
+            MOVE.L          #155,D1
             BSR             ESCCAR
 
             **Buffer 00***bra
@@ -398,12 +400,12 @@ INICIO:     BSR             INIT                 * Inicia el controlador
             BSR             ESCCAR
 
             **Buffer 03***btb
-            MOVE.L          #2,D0
+            MOVE.L          #3,D0
             MOVE.L          #157,D1
             BSR             ESCCAR
 
             **Buffer 03***btb
-            MOVE.L          #2,D0
+            MOVE.L          #3,D0
             MOVE.L          #161,D1
             BSR             ESCCAR
 
@@ -412,6 +414,12 @@ INICIO:     BSR             INIT                 * Inicia el controlador
             MOVE.L          #156,D1
             BSR             ESCCAR
 
+            **Buffer 02***bta
+            MOVE.L          #2,D0
+            MOVE.L          #162,D1
+            BSR             ESCCAR
+
+            **Buffer 00***bta
             MOVE.L          #0,D0
             MOVE.L          #157,D1
             BSR             ESCCAR
