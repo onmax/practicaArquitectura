@@ -204,7 +204,7 @@ EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      A1,D5
             MOVE.L      bta_fin,A2          *Puntero de fin -> A2
             MOVE.L      A2,D6
-            MOVE.L      D3,(A0)             *Se escribe el caracter en el buffer
+            MOVE.B      D3,(A0)             *Se escribe el caracter en el buffer
             CMP.L       D4,D6               *¿Escritura = FIN?
             BEQ         FIN_B
 
@@ -259,11 +259,12 @@ LINEA:  RTS
 
 
 **************************** PROGRAMA PRINCIPAL **********************************************
-INICIO: BSR             INIT                 * Inicia el controlador
-        MOVE.L          #2,D0
-        MOVE.L          #97,D1
-        BSR             ESCCAR               * Recibe la linea
-        BREAK
+INICIO:     BSR             INIT                 * Inicia el controlador
+            MOVE.L          #2,D0
+B_PRUEBAS:  MOVE.L          #97,D1
+            BSR             ESCCAR               * Recibe la linea
+            BSR             B_PRUEBAS
+            BREAK
 **************************** FIN PROGRAMA PRINCIPAL ******************************************
 
  
