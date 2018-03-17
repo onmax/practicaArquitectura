@@ -355,10 +355,66 @@ LINEA:  RTS
 
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR             INIT                 * Inicia el controlador
-B_PRUEBAS:
+
+
+            **Buffer 02***bta
             MOVE.L          #2,D0
       	    MOVE.L          #97,D1
-            BSR             ESCCAR               * Recibe la linea
-            BSR             B_PRUEBAS
+            BSR             ESCCAR
+
+            **Buffer 01***brb
+            MOVE.L          #1,D0
+            MOVE.L          #151,D1
+            BSR             ESCCAR
+
+
+            **Buffer 00***bra
+            MOVE.L          #0,D0
+            MOVE.L          #152,D1
+            BSR             ESCCAR
+
+            MOVE.L          #0,D0
+            MOVE.L          #153,D1
+            BSR             ESCCAR
+
+            **Buffer 02***bta
+            MOVE.L          #2,D0
+      	    MOVE.L          #153,D1
+            BSR             ESCCAR
+
+            **Buffer 03***btb
+            MOVE.L          #2,D0
+      	    MOVE.L          #155,D1
+            BSR             ESCCAR
+
+            **Buffer 00***bra
+            MOVE.L          #0,D0
+            MOVE.L          #156,D1
+            BSR             ESCCAR
+
+            **Buffer 01***brb
+            MOVE.L          #1,D0
+            MOVE.L          #158,D1
+            BSR             ESCCAR
+
+            **Buffer 03***btb
+            MOVE.L          #2,D0
+            MOVE.L          #157,D1
+            BSR             ESCCAR
+
+            **Buffer 03***btb
+            MOVE.L          #2,D0
+            MOVE.L          #161,D1
+            BSR             ESCCAR
+
+            **Buffer 00***bra
+            MOVE.L          #0,D0
+            MOVE.L          #156,D1
+            BSR             ESCCAR
+
+            MOVE.L          #0,D0
+            MOVE.L          #157,D1
+            BSR             ESCCAR
+
             BREAK
 **************************** FIN PROGRAMA PRINCIPAL ******************************************
