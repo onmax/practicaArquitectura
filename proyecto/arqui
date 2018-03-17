@@ -154,50 +154,46 @@ SCAN:     RTS
 
 
 
+VACIO:      MOVE.L      #$ffffffff,D0
+            RTS
+
+
 **************************** LEERCAR ************************************************************
-LEERCAR:    MOVE.L      #0,A0              *Inicializamos a 0 --> A0
-            MOVE.L      #0,A1              *Inicializamos a 0 --> A1
-            MOVE.L      D0,D1               *Obtenemos de pila el buffer
-            BTST        #0,D1              *Si el bit 0 == 0 --> Ir a linea A
-            BEQ         L_LIN_A               *EOC --> Ir a B
+LEERCAR:    MOVE.L      D0,D2           *Buffer a D2
+            MOVE.L      #0,D3           *D3 a cero
+            MOVE.B      D1,D3           *Caracter a D3
+            MOVE.L      #0,A0           *A0 a cero
+            MOVE.L      #0,A1           *A1 a cero
+            BTST        #0,D2           *Si el bit 0 == 0 --> Ir a linea A
+            BEQ         E_LIN_A            *EOC --> Ir a B
 
-            BTST        #1,D1              *Si el bit 1 == 0 --> Ir a recepcion
-            BEQ         LC_BRB              *EOC --> Ir a transmision
-            BSR         LC_BTB
+            BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
+            BEQ         EC_BRB           *EOC --> Ir a transmision
 
-L_LIN_A:    BTST        #1,D1              *Se repite el mismo esquema que LIN_B
-            BEQ         LC_BRA
-            BSR         LC_BTA
+            ******Buffer transmision B**************
+            LC_BTB:
+
+E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
+            BEQ         EC_BRA
+
+            ******Buffer transmision A**************
+            LC_BTA:
 
 
-
-******Buffer transmision A******
-
-LC_BTA:
-            RTS
-
-*******Buffer recepcion A*******
+*******Buffer recepcion A***************
 LC_BRA:
-            RTS
-********************************
 
 
-******Buffer transmision B******
-LC_BTB:
-            RTS
-
-*******Buffer recepcion B*******
+*******Buffer recepcion B***************
 LC_BRB:
-            RTS
-********************************
 
 
 **************************** FIN LEERCAR ********************************************************
 
+
 LLENO:      MOVE.L      #$ffffffff,D0
             RTS
-VACIO:      MOVE.L      #$ffffffff,D0
-            RTS
+
 
 **************************** ESCCAR ************************************************************
 ESCCAR:     MOVE.L      D0,D2           *Buffer a D2
