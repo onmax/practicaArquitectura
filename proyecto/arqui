@@ -5,47 +5,48 @@
         DC.L    INICIO          * PC
 
         ORG     $400
-        *Declaraci?n de buffers
+        *Declaracion de buffers
         TAM_B:  EQU     5
         bra:    DS.B    TAM_B
         brb:    DS.B    TAM_B
         bta:    DS.B    TAM_B
         btb:    DS.B    TAM_B
 
+
         *Punteros de A
 
-            *Recepci?n
+            *Recepcion
             bra_escritura:          DS.B  4
             bra_lectura:            DS.B  4
             bra_fin:                DS.B  4
 
 
-            *Transmisi?n
+            *Transmision
             bta_escritura:          DS.B  4
             bta_lectura:            DS.B  4
             bta_fin:                DS.B  4
 
         *Punteros de B
 
-            *Recepci?n
+            *Recepcion
             brb_escritura:          DS.B  4
             brb_lectura:            DS.B  4
             brb_fin:                DS.B  4
 
 
-            *Transmisi?n
+            *Transmision
             btb_escritura:          DS.B  4
             btb_lectura:            DS.B  4
             btb_fin:                DS.B  4
 
 
-* Definici?n de equivalencias
+* Definicion de equivalencias
 ***************************************
 *********************************
 
 ***Para A - Tabla pg.27***
 MR1A    EQU     $effc01       * de modo A (escritura)
-MR2A    EQU     $effc01       * de modo A (2? escritura)
+MR2A    EQU     $effc01       * de modo A (segunda escritura)
 SRA     EQU     $effc03       * de estado A (lectura)
 CSRA    EQU     $effc03       * de seleccion de reloj A (escritura)
 CRA     EQU     $effc05       * de control A (escritura)
@@ -54,7 +55,7 @@ RBA     EQU     $effc07       * buffer recepcion A  (lectura)
 
 ***Para B - Tabla pg.27***
 MR1B    EQU     $effc11       * de modo B (escritura)
-MR2B    EQU     $effc11       * de modo B (2? escritura)
+MR2B    EQU     $effc11       * de modo B (segunda escritura)
 SRB     EQU     $effc13       * de estado B (lectura)
 CSRB    EQU     $effc13       * de seleccion de reloj B (escritura)
 CRB     EQU     $effc15       * de control B (escritura)
@@ -83,14 +84,12 @@ INIT:
         *MOVE.B          #%00000000,ACR      * Velocidad = 38400 bps.
         *MOVE.B          #%00000101,CRA      * Transmision y recepcion activados. Full Duplex.
         *MOVE.B          #%00000101,CRB      * Transmision y recepcion activados. Full Duplex.
-        *MOVE.B          #%00000000,ISR      * Activar m?scara de interrupcion (lectura)
+        *MOVE.B          #%00000000,ISR      * Activar mascara de interrupcion (lectura)
         *MOVE.B          #%01000000,IVR      * Vector de interrupcion en 64 (decimal), 40(hexadecimal).
-                                            * RTI habr?a que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
+                                            * RTI habra que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
-        
-        MOVE.L  #TAM_B,D0
-        SUB.L   #1,D0
-        *INICIALIZACI?N DE PUNTEROS
+
+        *INICIALIZACION DE PUNTEROS
 
         MOVE.L  #bra,bra_escritura
         MOVE.L  #bra,bra_lectura
@@ -99,8 +98,8 @@ INIT:
         ADD.L   D0,D1               *Posicion efectiva del final en D1
         MOVE.L  D1,bra_fin
 
-        
-    
+
+
         MOVE.L  #brb,brb_escritura
         MOVE.L  #brb,brb_lectura
         MOVE.L  #brb,A0
@@ -114,7 +113,7 @@ INIT:
         MOVE.L  A0,D1
         ADD.L   D0,D1                   *Posicion efectiva del final en D1
         MOVE.L  D1,bta_fin
-        
+
 
         MOVE.L  #btb,btb_escritura
         MOVE.L  #btb,btb_lectura
@@ -194,7 +193,10 @@ LC_BRB:
 
 **************************** FIN LEERCAR ********************************************************
 
-
+LLENO:      MOVE.L      #$ffffffff,D0
+            RTS
+VACIO:      MOVE.L      #$ffffffff,D0
+            RTS
 
 **************************** ESCCAR ************************************************************
 ESCCAR:     MOVE.L      D0,D2           *Buffer a D2
@@ -214,7 +216,7 @@ E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             BSR         EC_BTA
 
 
-******Buffer transmision A******
+******Buffer transmision A**************
 EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      A0,D4
             MOVE.L      bta_lectura,A1      *Puntero de lectura -> A1
@@ -222,8 +224,8 @@ EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      bta_fin,A2          *Puntero de fin -> A2
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)             *Se escribe el caracter en el buffer
-            CMP.L       D4,D6               *?Escritura = FIN?
-            BEQ         FIN_B
+            CMP.L       D4,D6               *¿Escritura = FIN?
+            BEQ         EC_FIN_BTA
 
             MOVE.L      A0,D7               *Puntero de escritura -> D7
             ADD.L       #1,D7               *Puntero de escritura + 1
@@ -235,7 +237,7 @@ EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      #0,D0               *Se devuelve 0 en D0 al haber escrito el caracter correctamente
             RTS
 
-FIN_B:      MOVE.L      #bta,A3             *Cargamos en A3 el puntero de inicio del buffer
+EC_FIN_BTA: MOVE.L      #bta,A3             *Cargamos en A3 el puntero de inicio del buffer
             MOVE.L      A3,D7               *A3 -> D3
             CMP.L       D5,D7               *Comprobamos que puntero de inicio != puntero de lectura
             BEQ         LLENO
@@ -245,20 +247,98 @@ FIN_B:      MOVE.L      #bta,A3             *Cargamos en A3 el puntero de inicio
             MOVE.L      #0,D0               *Se devuelve 0 en D0 al haber escrito el caracter correctamente
             RTS
 
-LLENO:      MOVE.L      #$ffffffff,D0
+*******Buffer recepcion A***************
+EC_BRA:     MOVE.L      bra_escritura,A0
+            MOVE.L      A0,D4
+            MOVE.L      bra_lectura,A1
+            MOVE.L      A1,D5
+            MOVE.L      bra_fin,A2
+            MOVE.L      A2,D6
+            MOVE.B      D3,(A0)
+            CMP.L       D4,D6
+            BEQ         EC_FIN_BRA
+
+            MOVE.L      A0,D7
+            ADD.L       #1,D7
+            CMP.L       D7,D5
+            BEQ         LLENO
+
+            MOVE.L      D7,A0
+            MOVE.L      A0,bra_escritura
+            MOVE.L      #0,D0
             RTS
 
+EC_FIN_BRA: MOVE.L      #bra,A3
+            MOVE.L      A3,D7
+            CMP.L       D5,D7
+            BEQ         LLENO
+            MOVE.L      D7,D4
+            MOVE.L      D4,A0
+            MOVE.L      A0,bra_escritura
+            MOVE.L      #0,D0
+            RTS
 
-*******Buffer recepcion A*******
-EC_BRA:     RTS
-********************************
+******Buffer transmision B**************
+EC_BTB:     MOVE.L      btb_escritura,A0
+            MOVE.L      A0,D4
+            MOVE.L      btb_lectura,A1
+            MOVE.L      A1,D5
+            MOVE.L      btb_fin,A2
+            MOVE.L      A2,D6
+            MOVE.B      D3,(A0)
+            CMP.L       D4,D6
+            BEQ         EC_FIN_BTB
 
-******Buffer transmision B******
-EC_BTB:     RTS
+            MOVE.L      A0,D7
+            ADD.L       #1,D7
+            CMP.L       D7,D5
+            BEQ         LLENO
 
-*******Buffer recepcion B*******
-EC_BRB:     RTS
-********************************
+            MOVE.L      D7,A0
+            MOVE.L      A0,bra_escritura
+            MOVE.L      #0,D0
+            RTS
+
+EC_FIN_BTB: MOVE.L      #btb,A3
+            MOVE.L      A3,D7
+            CMP.L       D5,D7
+            BEQ         LLENO
+            MOVE.L      D7,D4
+            MOVE.L      D4,A0
+            MOVE.L      A0,btb_escritura
+            MOVE.L      #0,D0
+            RTS
+
+*******Buffer recepcion B***************
+EC_BRB:     MOVE.L      brb_escritura,A0
+            MOVE.L      A0,D4
+            MOVE.L      brb_lectura,A1
+            MOVE.L      A1,D5
+            MOVE.L      brb_fin,A2
+            MOVE.L      A2,D6
+            MOVE.B      D3,(A0)
+            CMP.L       D4,D6
+            BEQ         EC_FIN_BRB
+
+            MOVE.L      A0,D7
+            ADD.L       #1,D7
+            CMP.L       D7,D5
+            BEQ         LLENO
+
+            MOVE.L      D7,A0
+            MOVE.L      A0,brb_escritura
+            MOVE.L      #0,D0
+            RTS
+
+EC_FIN_BRB: MOVE.L      #brb,A3
+            MOVE.L      A3,D7
+            CMP.L       D5,D7
+            BEQ         LLENO
+            MOVE.L      D7,D4
+            MOVE.L      D4,A0
+            MOVE.L      A0,brb_escritura
+            MOVE.L      #0,D0
+            RTS
 
 
 **************************** FIN ESCCAR ********************************************************
