@@ -6,10 +6,11 @@
 
         ORG     $400
         *Declaraci?n de buffers
-        bra:    DS.B    5
-        brb:    DS.B    5
-        bta:    DS.B    5
-        btb:    DS.B    5
+        TAM_B:  EQU     5
+        bra:    DS.B    TAM_B
+        brb:    DS.B    TAM_B
+        bta:    DS.B    TAM_B
+        btb:    DS.B    TAM_B
 
         *Punteros de A
 
@@ -86,25 +87,41 @@ INIT:
         *MOVE.B          #%01000000,IVR      * Vector de interrupcion en 64 (decimal), 40(hexadecimal).
                                             * RTI habr?a que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
-
+        
+        MOVE.L  #TAM_B,D0
+        SUB.L   #1,D0
         *INICIALIZACI?N DE PUNTEROS
 
         MOVE.L  #bra,bra_escritura
         MOVE.L  #bra,bra_lectura
-        MOVE.L  #$404,bra_fin
+        MOVE.L  #bra,A0
+        MOVE.L  A0,D1
+        ADD.L   D0,D1               *Posicion efectiva del final en D1
+        MOVE.L  D1,bra_fin
 
+        
+    
         MOVE.L  #brb,brb_escritura
-        MOVE.L  #brb,btb_lectura
-        MOVE.L  #$409,brb_fin
+        MOVE.L  #brb,brb_lectura
+        MOVE.L  #brb,A0
+        MOVE.L  A0,D1
+        ADD.L   D0,D1                   *Posicion efectiva del final en D1
+        MOVE.L  D1,brb_fin
 
         MOVE.L  #bta,bta_escritura      *bta_escritura apunta donde apunta bta
         MOVE.L  #bta,bta_lectura
-        MOVE.L  #$40e,bta_fin
-
+        MOVE.L  #bta,A0
+        MOVE.L  A0,D1
+        ADD.L   D0,D1                   *Posicion efectiva del final en D1
+        MOVE.L  D1,bta_fin
+        
 
         MOVE.L  #btb,btb_escritura
         MOVE.L  #btb,btb_lectura
-        MOVE.L  #$413,btb_fin
+        MOVE.L  #btb,A0
+        MOVE.L  A0,D1
+        ADD.L   D0,D1                   *Posicion efectiva del final en D1
+        MOVE.L  D1,btb_fin
 
 
         RTS
