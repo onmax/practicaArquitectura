@@ -13,28 +13,26 @@
         btb:    DS.B    TAM_B
 
 
-        *Punteros de A
+        *Punteros 
 
-            *Recepcion
+            
             bra_escritura:          DS.B  4
             bra_lectura:            DS.B  4
-            bra_fin:                DS.B  4
+            bra_fin:                DS.B  4 
 
 
-            *Transmision
-            bta_escritura:          DS.B  4
-            bta_lectura:            DS.B  4
-            bta_fin:                DS.B  4
-
-        *Punteros de B
-
-            *Recepcion
             brb_escritura:          DS.B  4
             brb_lectura:            DS.B  4
             brb_fin:                DS.B  4
 
+            
 
-            *Transmision
+            bta_escritura:          DS.B  4
+            bta_lectura:            DS.B  4
+            bta_fin:                DS.B  4 
+
+               
+             
             btb_escritura:          DS.B  4
             btb_lectura:            DS.B  4
             btb_fin:                DS.B  4
@@ -99,13 +97,13 @@ INIT:
         MOVE.L  D1,bra_fin
 
 
-
         MOVE.L  #brb,brb_escritura
         MOVE.L  #brb,brb_lectura
         MOVE.L  #brb,A0
         MOVE.L  A0,D1
         ADD.L   D0,D1                   *Posicion efectiva del final en D1
         MOVE.L  D1,brb_fin
+
 
         MOVE.L  #bta,bta_escritura      *bta_escritura apunta donde apunta bta
         MOVE.L  #bta,bta_lectura
