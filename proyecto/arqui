@@ -218,7 +218,7 @@ EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      #0,D0               *Se devuelve 0 en D0 al haber escrito el caracter correctamente
             RTS
 
-FIN_B:      MOVE.L      bta,A3
+FIN_B:      MOVE.L      #bta,A3
             MOVE.L      A3,D7
             CMP.L       D5,D7
             BEQ         LLENO
@@ -260,8 +260,8 @@ LINEA:  RTS
 
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR             INIT                 * Inicia el controlador
-            MOVE.L          #2,D0
-B_PRUEBAS:  MOVE.L          #97,D1
+B_PRUEBAS:  MOVE.L          #2,D0
+            MOVE.L          #97,D1
             BSR             ESCCAR               * Recibe la linea
             BSR             B_PRUEBAS
             BREAK
