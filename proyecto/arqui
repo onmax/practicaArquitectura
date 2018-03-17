@@ -13,26 +13,26 @@
         btb:    DS.B    TAM_B
 
 
-        *Punteros 
+        *Punteros
 
-            
+
             bra_escritura:          DS.B  4
             bra_lectura:            DS.B  4
-            bra_fin:                DS.B  4 
+            bra_fin:                DS.B  4
 
 
             brb_escritura:          DS.B  4
             brb_lectura:            DS.B  4
             brb_fin:                DS.B  4
 
-            
+
 
             bta_escritura:          DS.B  4
             bta_lectura:            DS.B  4
-            bta_fin:                DS.B  4 
+            bta_fin:                DS.B  4
 
-               
-             
+
+
             btb_escritura:          DS.B  4
             btb_lectura:            DS.B  4
             btb_fin:                DS.B  4
@@ -223,7 +223,7 @@ EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)             *Se escribe el caracter en el buffer
             CMP.L       D4,D6               *¿Escritura = FIN?
-            BEQ         EC_FIN_BTA
+            BEQ         BTA_BF
 
             MOVE.L      A0,D7               *Puntero de escritura -> D7
             ADD.L       #1,D7               *Puntero de escritura + 1
@@ -235,7 +235,7 @@ EC_BTA:     MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
             MOVE.L      #0,D0               *Se devuelve 0 en D0 al haber escrito el caracter correctamente
             RTS
 
-EC_FIN_BTA: MOVE.L      #bta,A3             *Cargamos en A3 el puntero de inicio del buffer
+BTA_BF:     MOVE.L      #bta,A3             *Cargamos en A3 el puntero de inicio del buffer
             MOVE.L      A3,D7               *A3 -> D3
             CMP.L       D5,D7               *Comprobamos que puntero de inicio != puntero de lectura
             BEQ         LLENO
@@ -254,7 +254,7 @@ EC_BRA:     MOVE.L      bra_escritura,A0
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)
             CMP.L       D4,D6
-            BEQ         EC_FIN_BRA
+            BEQ         BRA_FB
 
             MOVE.L      A0,D7
             ADD.L       #1,D7
@@ -266,7 +266,7 @@ EC_BRA:     MOVE.L      bra_escritura,A0
             MOVE.L      #0,D0
             RTS
 
-EC_FIN_BRA: MOVE.L      #bra,A3
+BRA_FB:     MOVE.L      #bra,A3
             MOVE.L      A3,D7
             CMP.L       D5,D7
             BEQ         LLENO
@@ -285,7 +285,7 @@ EC_BTB:     MOVE.L      btb_escritura,A0
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)
             CMP.L       D4,D6
-            BEQ         EC_FIN_BTB
+            BEQ         BTB_FB
 
             MOVE.L      A0,D7
             ADD.L       #1,D7
@@ -297,7 +297,7 @@ EC_BTB:     MOVE.L      btb_escritura,A0
             MOVE.L      #0,D0
             RTS
 
-EC_FIN_BTB: MOVE.L      #btb,A3
+BTB_FB:    MOVE.L      #btb,A3
             MOVE.L      A3,D7
             CMP.L       D5,D7
             BEQ         LLENO
@@ -316,7 +316,7 @@ EC_BRB:     MOVE.L      brb_escritura,A0
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)
             CMP.L       D4,D6
-            BEQ         EC_FIN_BRB
+            BEQ         BRB_FB
 
             MOVE.L      A0,D7
             ADD.L       #1,D7
@@ -328,7 +328,7 @@ EC_BRB:     MOVE.L      brb_escritura,A0
             MOVE.L      #0,D0
             RTS
 
-EC_FIN_BRB: MOVE.L      #brb,A3
+BRB_FB:     MOVE.L      #brb,A3
             MOVE.L      A3,D7
             CMP.L       D5,D7
             BEQ         LLENO
