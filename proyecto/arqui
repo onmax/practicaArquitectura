@@ -196,15 +196,74 @@ L_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             BEQ         LC_BRA
 
             ******Buffer transmision A**************
-            LC_BTA:
+                        MOVE.L      bta_lectura,A0
+                        MOVE.L      A0,D4
+                        MOVE.L      bta_escritura,A1
+                        MOVE.L      A1,D5
+                        CMP.L       D4,D5
+                        BEQ         VACIO
+
+                        MOVE.B      (A0),D0
+                        MOVE.L      bta_fin,A2
+                        MOVE.L      A2,D6
+                        CMP.L       D6,D4
+                        BEQ         LBTA_BF
+
+                        ADD.L       #1,D4
+                        MOVE.L      D4,A0
+                        MOVE.L      A0,bta_lectura
+                        RTS
+            LBTA_BF:    MOVE.L      #bta,bta_lectura
+                        RTS
 
 
 *******Buffer recepcion A***************
-LC_BRA:
+LC_BRA:   MOVE.L      bra_lectura,A0
+          MOVE.L      A0,D4
+          MOVE.L      bra_escritura,A1
+          MOVE.L      A1,D5
+          CMP.L       D4,D5
+          BEQ         VACIO
+
+          MOVE.B      (A0),D0
+          MOVE.L      bra_fin,A2
+          MOVE.L      A2,D6
+          CMP.L       D6,D4
+          BEQ         LBRA_BF
+
+          ADD.L       #1,D4
+          MOVE.L      D4,A0
+          MOVE.L      A0,bra_lectura
+          RTS
+LBRA_BF:  MOVE.L      #bra,bra_lectura
+          RTS
 
 
 *******Buffer recepcion B***************
-LC_BRB:
+LC_BRB:   MOVE.L      brb_lectura,A0
+          MOVE.L      A0,D4
+          MOVE.L      brb_escritura,A1
+          MOVE.L      A1,D5
+          CMP.L       D4,D5
+          BEQ         VACIO
+
+          MOVE.B      (A0),D0
+          MOVE.L      brb_fin,A2
+          MOVE.L      A2,D6
+          CMP.L       D6,D4
+          BEQ         LBRB_BF
+
+          ADD.L       #1,D4
+          MOVE.L      D4,A0
+          MOVE.L      A0,brb_lectura
+          RTS
+LBRB_BF:  MOVE.L      #brb,brb_lectura
+          RTS
+
+
+
+**************************** FIN LEECAR ********************************************************
+
 
 
 **************************** FIN LEECAR ********************************************************
