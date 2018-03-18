@@ -421,16 +421,41 @@ LINEA:      MOVE.L      D0,D2           *Buffer a D2
             BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
             BEQ         LI_BRB          *EOC --> Ir a transmision
 
+
     ******Buffer transmision B**************
 
             MOVE.L      btb_lectura,A0              *Puntero de lectura -> A0
             MOVE.L      A0,D4                       *Direccion a la que apunta el puntero -> D4
             MOVE.L      btb_escritura,A1            *Puntero de escritura -> A1
             MOVE.L      A1,D5                       *Direccion a la que apunta el puntero -> D5
-            CMP.L       D4,D5                       *Comprobamos si lectura = escritura
-            BEQ         VACIO_LI                    *Si esta vacio, se toma el salto
+            MOVE.L      btb_fin,A2                  *Puntero de fin -> A2
+            MOVE.L      A2,D6                       *El puntero del fin apunta a D6
+            MOVE.L      #13,D7                      *13 -> D7 (El retorno de carro)
+            MOVE.L      #0,D0                       *Limpiamos el registro D0 (CONTADOR)
+            MOVE.L      #0,D1                       *Limpiamos el registro D1 (GUARDAMOS EL DATO DE LECTURA)
 
-            MOVE.L      #btb_lectura,ptr_linea      *ptr_linea apunta donde apunta btb_lectura
+
+BTB_LOOP:   CMP.L       D4,D5                       *Comprobamos si lectura = escritura
+            BEQ         LECTURA_ESCRITURA           *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
+
+            MOVE.B      (A0),D1                     *Leemos el dato
+
+            ADD.L       #1,D0                       *Añadimos uno al contador
+
+            CMP.L       D1,D7                       *Si el dato leido es 13, vamos al final de la subrutina
+            BEQ         F_BTA_LIN
+
+            CMP.L       D6,D4                       *Si el puntero de lectura ha llegado al final vamos a inicio del buffer
+            BEQ         INICIO_BTA
+
+            ADD.L       #1,D4                       *Aumentamos el puntero al siguiente elemento
+            BSR         BTB_LOOP
+
+INICIO_BTA: MOVE.L      #btb,A0
+            MOVE.L      A0,D4                       *Guardamos el puntero de inicio en D2
+            BSR         BTB_LOOP
+
+F_BTA_LIN: RTS                                      *Se termina la rutina
 
 
 
