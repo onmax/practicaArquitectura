@@ -319,7 +319,7 @@ E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             MOVE.L      bta_fin,A2          *Puntero de fin -> A2
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)             *Se escribe el caracter en el buffer
-            CMP.L       D4,D6               *¿Escritura = FIN?
+            CMP.L       D4,D6               *?Escritura = FIN?
             BEQ         BTA_BF
 
             MOVE.L      A0,D7               *Puntero de escritura -> D7
@@ -410,7 +410,8 @@ BRB_FB:     MOVE.L      #brb,A3
 **************************** FIN ESCCAR ********************************************************
 
 
-
+NOLINEA:      MOVE.L       #0,D0
+              RTS
 
 
 **************************** LINEA ************************************************************
@@ -436,11 +437,11 @@ BRB_FB:     MOVE.L      #brb,A3
 
 
   BTB_LOOP:   CMP.L       D4,D5                       *Comprobamos si lectura = escritura
-              BEQ         F_BTB_LIN                   *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
+              BEQ         NOLINEA                   *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
 
               MOVE.L      D4,A0                       *Llevamos el D4 al A0
               MOVE.B      (A0),D1                     *Leemos el dato
-              ADD.L       #1,D0                       *Añadimos uno al contador
+              ADD.L       #1,D0                       *A?adimos uno al contador
 
               CMP.L       D1,D7                       *Si el dato leido es 13, vamos al final de la subrutina
               BEQ         F_BTB_LIN
@@ -476,7 +477,7 @@ BRB_FB:     MOVE.L      #brb,A3
 
 
       BTA_LOOP:   CMP.L       D4,D5
-                  BEQ         FBTALIN
+                  BEQ         NOLINEA
 
                   MOVE.L      D4,A0
                   MOVE.B      (A0),D1
@@ -511,7 +512,7 @@ BRB_FB:     MOVE.L      #brb,A3
 
 
         BRB_LOOP: CMP.L       D4,D5
-                  BEQ         FBRBLIN
+                  BEQ         NOLINEA
 
                   MOVE.L      D4,A0
                   MOVE.B      (A0),D1
@@ -546,7 +547,7 @@ BRB_FB:     MOVE.L      #brb,A3
 
 
           BRA_LOOP: CMP.L       D4,D5
-                    BEQ         FBRALIN
+                    BEQ         NOLINEA
 
                     MOVE.L      D4,A0
                     MOVE.B      (A0),D1
@@ -577,26 +578,23 @@ BRB_FB:     MOVE.L      #brb,A3
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR             INIT                 * Inicia el controlador
 
-            MOVE.L          bta_lectura,D7
 
             MOVE.L          #2,D0
             MOVE.L          #157,D1
             BSR             ESCCAR
 
-            MOVE.L          bta_lectura,D7
             MOVE.L          #2,D0
             MOVE.L          #157,D1
             BSR             ESCCAR
 
-            MOVE.L          bta_lectura,D7
             MOVE.L          #2,D0
-            MOVE.L          #14,D1
+            MOVE.L          #10,D1
             BSR             ESCCAR
 
             MOVE.L          #2,D0
-            BSR             LEECAR
+            MOVE.L          #10,D1
+            BSR             ESCCAR
 
-            MOVE.L          bta_lectura,D7
             MOVE.L          #2,D0
             MOVE.L          #13,D1
             BSR             ESCCAR
