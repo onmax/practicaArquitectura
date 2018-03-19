@@ -436,10 +436,9 @@ LINEA:      MOVE.L      D0,D2           *Buffer a D2
 
 
 BTB_LOOP:   CMP.L       D4,D5                       *Comprobamos si lectura = escritura
-            BEQ         LECTURA_ESCRITURA           *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
+            BEQ         F_BTA_LIN                   *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
 
             MOVE.B      (A0),D1                     *Leemos el dato
-
             ADD.L       #1,D0                       *Añadimos uno al contador
 
             CMP.L       D1,D7                       *Si el dato leido es 13, vamos al final de la subrutina
@@ -483,7 +482,7 @@ INICIO:     BSR             INIT                 * Inicia el controlador
             BSR             ESCCAR
             MOVE.L          #161,D1
             BSR             ESCCAR
-            MOVE.L          #161,D1
+            MOVE.L            #161,D1
             BSR             ESCCAR
             MOVE.L          #161,D1
             BSR             ESCCAR
