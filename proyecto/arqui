@@ -438,6 +438,7 @@
   BTB_LOOP:   CMP.L       D4,D5                       *Comprobamos si lectura = escritura
               BEQ         F_BTA_LIN                   *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
 
+              MOVE.L      D4,A0                       *Llevamos el D4 al A0
               MOVE.B      (A0),D1                     *Leemos el dato
               ADD.L       #1,D0                       *Añadimos uno al contador
 
@@ -476,6 +477,8 @@
 
       BTA_LOOP:   CMP.L       D4,D5
                   BEQ         F_BTA_LIN
+
+                  MOVE.L      D4,A0
                   MOVE.B      (A0),D1
                   ADD.L       #1,D0
 
@@ -509,6 +512,8 @@
 
         BRB_LOOP: CMP.L       D4,D5
                   BEQ         F_BRB_LIN
+
+                  MOVE.L      D4,A0
                   MOVE.B      (A0),D1
                   ADD.L       #1,D0
 
@@ -542,6 +547,8 @@
 
           BRA_LOOP: CMP.L       D4,D5
                     BEQ         F_BRA_LIN
+
+                    MOVE.L      D4,A0
                     MOVE.B      (A0),D1
                     ADD.L       #1,D0
 
