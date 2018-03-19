@@ -416,7 +416,7 @@ BRB_FB:     MOVE.L      #brb,A3
 **************************** LINEA ************************************************************
   LINEA:      MOVE.L      D0,D2           *Buffer a D2
               BTST        #0,D2           *Si el bit 0 == 0 --> Ir a linea A
-              BEQ          LI_LIN_A         *EOC --> Ir a B
+              BEQ         LI_LIN_A         *EOC --> Ir a B
 
               BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
               BEQ         LI_BRB          *EOC --> Ir a transmision
@@ -449,11 +449,11 @@ BRB_FB:     MOVE.L      #brb,A3
               BEQ         INICIO_BTB
 
               ADD.L       #1,D4                       *Aumentamos el puntero al siguiente elemento
-              BSR         BTB_LOOP
+              BCC         BTB_LOOP
 
   INICIO_BTB: MOVE.L      #btb,A0
               MOVE.L      A0,D4                       *Guardamos el puntero de inicio en D2
-              BRA         BTB_LOOP
+              BCC         BTB_LOOP
 
   F_BTB_LIN: RTS                                      *Se termina la rutina
 
@@ -489,11 +489,11 @@ BRB_FB:     MOVE.L      #brb,A3
                   BEQ         INI_BTA
 
                   ADD.L       #1,D4
-                  BSR         BTA_LOOP
+                  BCC         BTA_LOOP
 
       INI_BTA: MOVE.L      #bta,A0
                   MOVE.L      A0,D4
-                  BSR         BTA_LOOP
+                  BCC         BTA_LOOP
 
       FBTALIN: RTS
 
@@ -524,11 +524,11 @@ BRB_FB:     MOVE.L      #brb,A3
                   BEQ         INI_BRB
 
                   ADD.L       #1,D4
-                  BSR         BRB_LOOP
+                  BCC         BRB_LOOP
 
       INI_BRB:    MOVE.L      #brb,A0
                   MOVE.L      A0,D4
-                  BSR         BTA_LOOP
+                  BCC         BTA_LOOP
 
         FBRBLIN: RTS
 
@@ -559,11 +559,11 @@ BRB_FB:     MOVE.L      #brb,A3
                     BEQ         INI_BRA
 
                     ADD.L       #1,D4
-                    BSR         BRA_LOOP
+                    BCC         BRA_LOOP
 
         INI_BRA:    MOVE.L      #bra,A0
                     MOVE.L      A0,D4
-                    BSR         BRA_LOOP
+                    BCC         BRB_LOOP
 
         FBRALIN: RTS
 
@@ -577,29 +577,35 @@ BRB_FB:     MOVE.L      #brb,A3
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR             INIT                 * Inicia el controlador
 
+            MOVE.L          bta_lectura,D7
 
             MOVE.L          #2,D0
             MOVE.L          #157,D1
             BSR             ESCCAR
-            
+
+            MOVE.L          bta_lectura,D7
             MOVE.L          #2,D0
-            MOVE.L          #158,D1
+            MOVE.L          #157,D1
             BSR             ESCCAR
-           
+
+            MOVE.L          bta_lectura,D7
             MOVE.L          #2,D0
-            MOVE.L          #159,D1
+            MOVE.L          #14,D1
             BSR             ESCCAR
 
             MOVE.L          #2,D0
-            MOVE.L          #160,D1
+            BSR             LEECAR
+
+            MOVE.L          bta_lectura,D7
+            MOVE.L          #2,D0
+            MOVE.L          #13,D1
             BSR             ESCCAR
 
             MOVE.L          #2,D0
-            MOVE.L          #161,D1
-            BSR             ESCCAR
+            BSR LINEA
 
-            MOVE.L          #2,D0
-            BSR             LINEA
+
+
 
 
             BREAK
