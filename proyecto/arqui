@@ -413,10 +413,10 @@
 
 
 
-  **************************** LINEA ************************************************************
+    **************************** LINEA ************************************************************
   LINEA:      MOVE.L      D0,D2           *Buffer a D2
               BTST        #0,D2           *Si el bit 0 == 0 --> Ir a linea A
-              EQ          LI_LIN_A         *EOC --> Ir a B
+              BEQ          LI_LIN_A         *EOC --> Ir a B
 
               BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
               BEQ         LI_BRB          *EOC --> Ir a transmision
@@ -436,14 +436,14 @@
 
 
   BTB_LOOP:   CMP.L       D4,D5                       *Comprobamos si lectura = escritura
-              BEQ         F_BTA_LIN                   *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
+              BEQ         F_BTB_LIN                   *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
 
               MOVE.L      D4,A0                       *Llevamos el D4 al A0
               MOVE.B      (A0),D1                     *Leemos el dato
               ADD.L       #1,D0                       *Añadimos uno al contador
 
               CMP.L       D1,D7                       *Si el dato leido es 13, vamos al final de la subrutina
-              BEQ         F_BTA_LIN
+              BEQ         F_BTB_LIN
 
               CMP.L       D6,D4                       *Si el puntero de lectura ha llegado al final vamos a inicio del buffer
               BEQ         INICIO_BTB
@@ -455,7 +455,7 @@
               MOVE.L      A0,D4                       *Guardamos el puntero de inicio en D2
               BSR         BTB_LOOP
 
-  F_BTA_LIN: RTS                                      *Se termina la rutina
+  F_BTB_LIN: RTS                                      *Se termina la rutina
 
 
 
@@ -476,26 +476,26 @@
 
 
       BTA_LOOP:   CMP.L       D4,D5
-                  BEQ         F_BTA_LIN
+                  BEQ         FBTALIN
 
                   MOVE.L      D4,A0
                   MOVE.B      (A0),D1
                   ADD.L       #1,D0
 
                   CMP.L       D1,D7
-                  BEQ         F_BTA_LIN
+                  BEQ         FBTALIN
 
                   CMP.L       D6,D4
-                  BEQ         INICIO_BTA
+                  BEQ         INI_BTA
 
                   ADD.L       #1,D4
                   BSR         BTA_LOOP
 
-      INICIO_BTA: MOVE.L      #bta,A0
+      INI_BTA: MOVE.L      #bta,A0
                   MOVE.L      A0,D4
                   BSR         BTA_LOOP
 
-      F_BTA_LIN: RTS
+      FBTALIN: RTS
 
       ******Buffer recepcion B**************
 
@@ -511,26 +511,26 @@
 
 
         BRB_LOOP: CMP.L       D4,D5
-                  BEQ         F_BRB_LIN
+                  BEQ         FBRBLIN
 
                   MOVE.L      D4,A0
                   MOVE.B      (A0),D1
                   ADD.L       #1,D0
 
                   CMP.L       D1,D7
-                  BEQ         F_BRB_LIN
+                  BEQ         FBRBLIN
 
                   CMP.L       D6,D4
-                  BEQ         INICIO_BRB
+                  BEQ         INI_BRB
 
                   ADD.L       #1,D4
                   BSR         BRB_LOOP
 
-      INICIO_BRB: MOVE.L      #brb,A0
+      INI_BRB:    MOVE.L      #brb,A0
                   MOVE.L      A0,D4
                   BSR         BTA_LOOP
 
-        F_BRB_LIN: RTS
+        FBRBLIN: RTS
 
         ******Buffer recepcion A**************
 
@@ -546,26 +546,26 @@
 
 
           BRA_LOOP: CMP.L       D4,D5
-                    BEQ         F_BRA_LIN
+                    BEQ         FBRALIN
 
                     MOVE.L      D4,A0
                     MOVE.B      (A0),D1
                     ADD.L       #1,D0
 
                     CMP.L       D1,D7
-                    BEQ         F_BRA_LIN
+                    BEQ         FBRALIN
 
                     CMP.L       D6,D4
-                    BEQ         INICIO_BRA
+                    BEQ         INI_BRA
 
                     ADD.L       #1,D4
                     BSR         BRA_LOOP
 
-        INICIO_BRA: MOVE.L      #bra,A0
+        INI_BRA:    MOVE.L      #bra,A0
                     MOVE.L      A0,D4
                     BSR         BRA_LOOP
 
-          F_BRA_LIN: RTS
+        FBRALIN: RTS
 
 
 
