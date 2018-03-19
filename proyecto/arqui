@@ -6,7 +6,7 @@
 
         ORG     $400
         *Declaracion de buffers
-        TAM_B:  EQU     2001
+        TAM_B:  EQU     5
         bra:    DS.B    TAM_B
         brb:    DS.B    TAM_B
         bta:    DS.B    TAM_B
@@ -453,7 +453,7 @@ BRB_FB:     MOVE.L      #brb,A3
 
   INICIO_BTB: MOVE.L      #btb,A0
               MOVE.L      A0,D4                       *Guardamos el puntero de inicio en D2
-              BSR         BTB_LOOP
+              BRA         BTB_LOOP
 
   F_BTB_LIN: RTS                                      *Se termina la rutina
 
@@ -581,42 +581,25 @@ INICIO:     BSR             INIT                 * Inicia el controlador
             MOVE.L          #2,D0
             MOVE.L          #157,D1
             BSR             ESCCAR
-            MOVE.L          #2,D0
-            BSR             LEECAR
-
-
+            
             MOVE.L          #2,D0
             MOVE.L          #158,D1
             BSR             ESCCAR
+           
             MOVE.L          #2,D0
-            BSR             LEECAR
-
-
-            MOVE.L          #2,D0
-            MOVE.L          #158,D1
-            BSR             ESCCAR
-            MOVE.L          #2,D0
-            MOVE.L          #158,D1
-            BSR             ESCCAR
-            MOVE.L          #2,D0
-            MOVE.L          #158,D1
+            MOVE.L          #159,D1
             BSR             ESCCAR
 
             MOVE.L          #2,D0
-            BSR             LEECAR
-            MOVE.L          #2,D0
-            BSR             LEECAR
-            MOVE.L          #2,D0
-            BSR             LEECAR
-            MOVE.L          #2,D0
-            BSR             LEECAR
+            MOVE.L          #160,D1
+            BSR             ESCCAR
 
+            MOVE.L          #2,D0
             MOVE.L          #161,D1
             BSR             ESCCAR
+
             MOVE.L          #2,D0
-            BSR             LEECAR
-
-
+            BSR             LINEA
 
 
             BREAK
