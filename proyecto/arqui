@@ -579,17 +579,31 @@ NOLINEA:      MOVE.L       #0,D0
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR             INIT                 * Inicia el controlador
             
-            MOVE.L          #200,D4
-
+            MOVE.L          #1800,D4
 BUCLE1:     MOVE.L          #0,D0
             MOVE.L          #157,D1
             BSR             ESCCAR
             SUB.L           #1,D4
             CMP             #0,D4
             BNE             BUCLE1 
-	    
-	    BSR 	    LEECAR
-                     
+
+            MOVE.L          #100,D1
+BUCLE2:     MOVE.L          #0,D0
+            BSR             LEECAR
+            SUB.L           #1,D1
+            CMP             #0,D1
+            BNE             BUCLE2  
+
+            MOVE.L          #300,D4
+BUCLE3:     MOVE.L          #0,D0
+            MOVE.L          #157,D1
+            BSR             ESCCAR
+            SUB.L           #1,D4
+            CMP             #0,D4
+            BNE             BUCLE3         
+
 
             BREAK
+
+            
 **************************** FIN PROGRAMA PRINCIPAL ****************************************** 
