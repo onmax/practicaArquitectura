@@ -6,7 +6,8 @@
 
         ORG     $400
         *Declaracion de buffers
-        TAM_B:  EQU     5
+        TAM_B:  EQU     2001
+
         bra:    DS.B    TAM_B
         brb:    DS.B    TAM_B
         bta:    DS.B    TAM_B
@@ -277,13 +278,13 @@ ESCCAR:     MOVE.L      D0,D2           *Buffer a D2
 
     ******Buffer transmision B**************
             MOVE.L      btb_escritura,A0
-            MOVE.L      A0,D4
+            MOVE.L      A0,D2
             MOVE.L      btb_lectura,A1
             MOVE.L      A1,D5
             MOVE.L      btb_fin,A2
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)
-            CMP.L       D4,D6
+            CMP.L       D2,D6
             BEQ         BTB_FB
 
             MOVE.L      A0,D7
@@ -300,8 +301,8 @@ BTB_FB:     MOVE.L      #btb,A3
             MOVE.L      A3,D7
             CMP.L       D5,D7
             BEQ         LLENO
-            MOVE.L      D7,D4
-            MOVE.L      D4,A0
+            MOVE.L      D7,D2
+            MOVE.L      D2,A0
             MOVE.L      A0,btb_escritura
             MOVE.L      #0,D0
             RTS
@@ -313,13 +314,13 @@ E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
 
     ******Buffer transmision A**************
             MOVE.L      bta_escritura,A0    *Puntero de escritura -> A0
-            MOVE.L      A0,D4
+            MOVE.L      A0,D2
             MOVE.L      bta_lectura,A1      *Puntero de lectura -> A1
             MOVE.L      A1,D5
             MOVE.L      bta_fin,A2          *Puntero de fin -> A2
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)             *Se escribe el caracter en el buffer
-            CMP.L       D4,D6               *?Escritura = FIN?
+            CMP.L       D2,D6               *?Escritura = FIN?
             BEQ         BTA_BF
 
             MOVE.L      A0,D7               *Puntero de escritura -> D7
@@ -336,21 +337,21 @@ BTA_BF:     MOVE.L      #bta,A3             *Cargamos en A3 el puntero de inicio
             MOVE.L      A3,D7               *A3 -> D3
             CMP.L       D5,D7               *Comprobamos que puntero de inicio != puntero de lectura
             BEQ         LLENO
-            MOVE.L      D7,D4               *No esta lleno, por lo que se puede escribir en el buffer
-            MOVE.L      D4,A0               *D4 -> A0
+            MOVE.L      D7,D2               *No esta lleno, por lo que se puede escribir en el buffer
+            MOVE.L      D2,A0               *D4 -> A0
             MOVE.L      A0,bta_escritura    *Actualizamos el puntero de escritura
             MOVE.L      #0,D0               *Se devuelve 0 en D0 al haber escrito el caracter correctamente
             RTS
 
 *******Buffer recepcion A***************
 EC_BRA:     MOVE.L      bra_escritura,A0
-            MOVE.L      A0,D4
+            MOVE.L      A0,D2
             MOVE.L      bra_lectura,A1
             MOVE.L      A1,D5
             MOVE.L      bra_fin,A2
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)
-            CMP.L       D4,D6
+            CMP.L       D2,D6
             BEQ         BRA_FB
 
             MOVE.L      A0,D7
@@ -367,8 +368,8 @@ BRA_FB:     MOVE.L      #bra,A3
             MOVE.L      A3,D7
             CMP.L       D5,D7
             BEQ         LLENO
-            MOVE.L      D7,D4
-            MOVE.L      D4,A0
+            MOVE.L      D7,D2
+            MOVE.L      D2,A0
             MOVE.L      A0,bra_escritura
             MOVE.L      #0,D0
             RTS
@@ -377,13 +378,13 @@ BRA_FB:     MOVE.L      #bra,A3
 
 *******Buffer recepcion B***************
 EC_BRB:     MOVE.L      brb_escritura,A0
-            MOVE.L      A0,D4
+            MOVE.L      A0,D2
             MOVE.L      brb_lectura,A1
             MOVE.L      A1,D5
             MOVE.L      brb_fin,A2
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)
-            CMP.L       D4,D6
+            CMP.L       D2,D6
             BEQ         BRB_FB
 
             MOVE.L      A0,D7
@@ -400,8 +401,8 @@ BRB_FB:     MOVE.L      #brb,A3
             MOVE.L      A3,D7
             CMP.L       D5,D7
             BEQ         LLENO
-            MOVE.L      D7,D4
-            MOVE.L      D4,A0
+            MOVE.L      D7,D2
+            MOVE.L      D2,A0
             MOVE.L      A0,brb_escritura
             MOVE.L      #0,D0
             RTS
@@ -450,11 +451,11 @@ NOLINEA:      MOVE.L       #0,D0
               BEQ         INICIO_BTB
 
               ADD.L       #1,D4                       *Aumentamos el puntero al siguiente elemento
-              BCC         BTB_LOOP
+              BRA         BTB_LOOP
 
   INICIO_BTB: MOVE.L      #btb,A0
               MOVE.L      A0,D4                       *Guardamos el puntero de inicio en D2
-              BCC         BTB_LOOP
+              BRA         BTB_LOOP
 
   F_BTB_LIN: RTS                                      *Se termina la rutina
 
@@ -490,11 +491,11 @@ NOLINEA:      MOVE.L       #0,D0
                   BEQ         INI_BTA
 
                   ADD.L       #1,D4
-                  BCC         BTA_LOOP
+                  BRA         BTA_LOOP
 
       INI_BTA: MOVE.L      #bta,A0
                   MOVE.L      A0,D4
-                  BCC         BTA_LOOP
+                  BRA         BTA_LOOP
 
       FBTALIN: RTS
 
@@ -525,11 +526,11 @@ NOLINEA:      MOVE.L       #0,D0
                   BEQ         INI_BRB
 
                   ADD.L       #1,D4
-                  BCC         BRB_LOOP
+                  BRA         BRB_LOOP
 
       INI_BRB:    MOVE.L      #brb,A0
                   MOVE.L      A0,D4
-                  BCC         BTA_LOOP
+                  BRA         BTA_LOOP
 
         FBRBLIN: RTS
 
@@ -560,11 +561,11 @@ NOLINEA:      MOVE.L       #0,D0
                     BEQ         INI_BRA
 
                     ADD.L       #1,D4
-                    BCC         BRA_LOOP
+                    BRA         BRA_LOOP
 
         INI_BRA:    MOVE.L      #bra,A0
                     MOVE.L      A0,D4
-                    BCC         BRB_LOOP
+                    BRA         BRB_LOOP
 
         FBRALIN: RTS
 
@@ -577,34 +578,32 @@ NOLINEA:      MOVE.L       #0,D0
 
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR             INIT                 * Inicia el controlador
-
-
-            MOVE.L          #2,D0
+            
+            MOVE.L          #1800,D4
+BUCLE1:     MOVE.L          #0,D0
             MOVE.L          #157,D1
             BSR             ESCCAR
+            SUB.L           #1,D4
+            CMP             #0,D4
+            BNE             BUCLE1 
 
-            MOVE.L          #2,D0
+            MOVE.L          #100,D1
+BUCLE2:     MOVE.L          #0,D0
+            BSR             LEECAR
+            SUB.L           #1,D1
+            CMP             #0,D1
+            BNE             BUCLE2  
+
+            MOVE.L          #300,D4
+BUCLE3:     MOVE.L          #0,D0
             MOVE.L          #157,D1
             BSR             ESCCAR
-
-            MOVE.L          #2,D0
-            MOVE.L          #10,D1
-            BSR             ESCCAR
-
-            MOVE.L          #2,D0
-            MOVE.L          #10,D1
-            BSR             ESCCAR
-
-            MOVE.L          #2,D0
-            MOVE.L          #13,D1
-            BSR             ESCCAR
-
-            MOVE.L          #2,D0
-            BSR LINEA
-
-
-
+            SUB.L           #1,D4
+            CMP             #0,D4
+            BNE             BUCLE3         
 
 
             BREAK
-**************************** FIN PROGRAMA PRINCIPAL ******************************************
+
+            
+**************************** FIN PROGRAMA PRINCIPAL ****************************************** 
