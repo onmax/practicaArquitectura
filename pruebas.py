@@ -9,9 +9,12 @@ for a in range(1,59):
 
 p = open("corrector.txt","r")
 fp = p.read()
+cont = 0
 for elem in titulo_pruebas:  
     if (re.search(elem,fp)):
         print ("Fallas en " + elem)
         titulo_pruebas.remove(elem)
-for elem in titulo_pruebas:
-    print("Has pasado " + elem)
+        cont += 1
+        
+print ("Fallas en total " + str(cont) + " de " + str(60))
+print (str(cont*100/60) + " %")
