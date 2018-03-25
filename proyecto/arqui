@@ -8,35 +8,41 @@
         *Declaracion de buffers
         TAM_B:  EQU     2001
 
-        bra:    DS.B    TAM_B
-        brb:    DS.B    TAM_B
-        bta:    DS.B    TAM_B
-        btb:    DS.B    TAM_B
+        bra:    DS.B    TAM_B     *400
+        brb:    DS.B    TAM_B     *bd1
+        bta:    DS.B    TAM_B     *13a2
+        btb:    DS.B    TAM_B     *1b73
+        bscan:  DS.B    TAM_B     *2344
 
 
         *Punteros
 
 
-            bra_escritura:          DS.B  4
+            bra_escritura:          DS.B  4     
             bra_lectura:            DS.B  4
-            bra_fin:                DS.B  4
+            bra_fin:                DS.B  4       *bd0
 
 
             brb_escritura:          DS.B  4
             brb_lectura:            DS.B  4
-            brb_fin:                DS.B  4
+            brb_fin:                DS.B  4       *13a1
 
 
 
             bta_escritura:          DS.B  4
             bta_lectura:            DS.B  4
-            bta_fin:                DS.B  4
+            bta_fin:                DS.B  4       *1b72
 
 
 
             btb_escritura:          DS.B  4
             btb_lectura:            DS.B  4
-            btb_fin:                DS.B  4
+            btb_fin:                DS.B  4       *2343
+
+
+
+            bscan_inicio:           DS.B  4
+            bscan_escritura:        DS.B  4
 
 
 * Definicion de equivalencias
@@ -73,18 +79,18 @@ IVR     EQU     $effc19       * de control auxiliar
 
 **************************** INIT *************************************************************
 INIT:
-        *MOVE.B          #%00010000,CRA      * Reinicia el puntero MR1
-        *MOVE.B          #%00000011,MR1A     * 8 bits por caracter y solicita interrupcion
-        *MOVE.B          #%00000011,MR1B     * 8 bits por caracter y solicita interrupcion
-        *MOVE.B          #%00000000,MR2A     * Eco desactivado.
-        *MOVE.B          #%00000000,MR2B     * Eco desactivado.
-        *MOVE.B          #%11001100,CSRA     * Velocidad = 38400 bps.
-        *MOVE.B          #%11001100,CSRB     * Velocidad = 38400 bps.
-        *MOVE.B          #%00000000,ACR      * Velocidad = 38400 bps.
-        *MOVE.B          #%00000101,CRA      * Transmision y recepcion activados. Full Duplex.
-        *MOVE.B          #%00000101,CRB      * Transmision y recepcion activados. Full Duplex.
-        *MOVE.B          #%00000000,ISR      * Activar mascara de interrupcion (lectura)
-        *MOVE.B          #%01000000,IVR      * Vector de interrupcion en 64 (decimal), 40(hexadecimal).
+        MOVE.B          #%00010000,CRA      * Reinicia el puntero MR1
+        MOVE.B          #%00000011,MR1A     * 8 bits por caracter y solicita interrupcion
+        MOVE.B          #%00000011,MR1B     * 8 bits por caracter y solicita interrupcion
+        MOVE.B          #%00000000,MR2A     * Eco desactivado.
+        MOVE.B          #%00000000,MR2B     * Eco desactivado.
+        MOVE.B          #%11001100,CSRA     * Velocidad = 38400 bps.
+        MOVE.B          #%11001100,CSRB     * Velocidad = 38400 bps.
+        MOVE.B          #%00000000,ACR      * Velocidad = 38400 bps.
+        MOVE.B          #%00000101,CRA      * Transmision y recepcion activados. Full Duplex.
+        MOVE.B          #%00000101,CRB      * Transmision y recepcion activados. Full Duplex.
+        MOVE.B          #%00000000,ISR      * Activar mascara de interrupcion (lectura)
+        MOVE.B          #%01000000,IVR      * Vector de interrupcion en 64 (decimal), 40(hexadecimal).
                                             * RTI habra que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
 
@@ -125,6 +131,10 @@ INIT:
         MOVE.L  D1,btb_fin
 
 
+        MOVE.L  #bscan,bscan_inicio
+        MOVE.L  #bscan,bscan_escritura
+
+
         RTS
 **************************** FIN INIT *********************************************************
 
@@ -145,18 +155,67 @@ PRINT:  RTS
 
 
 
+P_INCORRECTO:   MOVE.L   #$ffffffff,D0      
+                RTS
 
-
+ERROR:          MOVE.L   #0,D0
+                RTS
 
 **************************** SCAN ************************************************************
-SCAN:     RTS
+SCAN:     LINK      A6,#-8          *Creación del marco de pila (en este caso para albergar 1 variable local)
+          MOVE.L    #0,D1
+          MOVE.L    #0,D2
+          MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
+          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)
+          MOVE.L    $8(A6),D3           *Pasar el valor del parámetro Buffer al registro deseado (en este caso D3)
+          MOVE.L    #1,D4
+          CMP       D1,D4               *Comprobación de si los parámetros son correctos
+          BGT       P_INCORRECTO
+          MOVE.L    #2000,D5    
+          CMP       D0,D5
+          BGT       P_INCORRECTO
+          CMP       #1,D1               *Si Descriptor = 1
+          BEQ       SC_LIN_B            *Saltamos a la línea B
+          MOVE.L    #0,D0
+          BSR       LINEA
+          CMP       #0,D0
+          BEQ       ERROR
+          MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
+          CMP       D0,D1
+          BGT       ERROR
+          MOVE.L    D0,-4(A6)           *Guardamos en el marco de pila la longitud de la línea, que usaremos de contador
+          MOVE.L    D0,-8(A6)           *Guardamos en el marco de pila la longitud de la línea (sin alterarlo para devolverlo)
+LECTURAS: MOVE.L    #0,D0
+          BSR       LEECAR              *Llamamos a LEECAR con parametro 0 (bra)
+          MOVE.L    bscan_escritura,A0  *Llevamos la posicion del puntero del buffer nuevo a A0
+          MOVE.L    D0,(A0)             *Introducimos el carácter leido en la posicion de A0
+          ADD.L     #4,A0               *Avanzamos el puntero
+          MOVE.L    A0,bscan_escritura  *Actualizamos el puntero
+          SUB.L     #1,-4(A6)           *Restamos una iteración al contador
+          CMP.L     #0,-4(A6)           *Comprobamos si hemos llegado al final
+          BNE       LECTURAS            *Si no es el final volvemos al bucle
+          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres leídos
+
+
+SC_LIN_B:          
+
+
+
+
+
+
+
+
+
+          UNLK      A6            *Destrucción del marco de pila
+          RTS
 **************************** FIN SCAN ********************************************************
 
 
 
 
-VACIO:      MOVE.L      #$ffffffff,D0
-            RTS
+VACIO:     MOVE.L      #$ffffffff,D0
+          RTS
 
 
 **************************** LEECAR ************************************************************
@@ -320,7 +379,7 @@ E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             MOVE.L      bta_fin,A2          *Puntero de fin -> A2
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)             *Se escribe el caracter en el buffer
-            CMP.L       D2,D6               *?Escritura = FIN?
+            CMP.L       D2,D6               *¿Escritura = FIN?
             BEQ         BTA_BF
 
             MOVE.L      A0,D7               *Puntero de escritura -> D7
@@ -577,33 +636,19 @@ NOLINEA:      MOVE.L       #0,D0
 
 
 **************************** PROGRAMA PRINCIPAL **********************************************
-INICIO:     BSR             INIT                 * Inicia el controlador
+INICIO:     BSR  INIT                 * Inicia el controlador
             
-            MOVE.L          #1800,D4
-BUCLE1:     MOVE.L          #0,D0
-            MOVE.L          #157,D1
-            BSR             ESCCAR
-            SUB.L           #1,D4
-            CMP             #0,D4
-            BNE             BUCLE1 
-
-            MOVE.L          #100,D1
-BUCLE2:     MOVE.L          #0,D0
-            BSR             LEECAR
-            SUB.L           #1,D1
-            CMP             #0,D1
-            BNE             BUCLE2  
-
-            MOVE.L          #300,D4
-BUCLE3:     MOVE.L          #0,D0
-            MOVE.L          #157,D1
-            BSR             ESCCAR
-            SUB.L           #1,D4
-            CMP             #0,D4
-            BNE             BUCLE3         
+            MOVE.L  #5,D0
+            MOVE.L  #0,D1
+            MOVE.L  #bscan,D2
+            MOVE.W  D0,-(A7)
+            MOVE.W  D1,-(A7)
+            MOVE.L  D2,-(A7)
+            BSR SCAN
+            MOVE.L  (A7)+,D2  
+            MOVE.W  (A7)+,D1
+            MOVE.W  (A7)+,D0      
 
 
             BREAK
-
-            
-**************************** FIN PROGRAMA PRINCIPAL ****************************************** 
+**************************** FIN PROGRAMA PRINCIPAL ******************************************
