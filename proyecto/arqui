@@ -193,7 +193,7 @@ SCAN:     LINK      A6,#-8              *Creación del marco de pila (en este ca
 SCAN_LEC1:MOVE.L    #0,D0
           BSR       LEECAR              *Llamamos a LEECAR con parametro 0 (bra)
           MOVE.L    bscan_escritura,A0  *Llevamos la posicion del puntero del buffer nuevo a A0
-          MOVE.L    D0,(A0)             *Introducimos el carácter leido en la posicion de A0 (    MOVE.L    D0,(A0)+¿?   )
+          MOVE.B    D0,(A0)             *Introducimos el carácter leido en la posicion de A0 (    MOVE.L    D0,(A0)+¿?   )
           ADD.L     #1,A0               *Avanzamos el puntero
           MOVE.L    A0,bscan_escritura  *Actualizamos el puntero
           SUB.L     #1,-4(A6)           *Restamos una iteración al contador
@@ -210,7 +210,7 @@ SC_LIN_B:
 
 
 
-
+          BREAK
           UNLK      A6            *Destrucción del marco de pila
           RTS
 **************************** FIN SCAN ********************************************************
@@ -641,6 +641,20 @@ NOLINEA:      MOVE.L       #0,D0
 
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR  INIT                 * Inicia el controlador
+
+            MOVE.L          #10,D4
+
+BUCLE1:     MOVE.L          #0,D0
+            MOVE.L          #157,D1
+            BSR             ESCCAR
+            SUB.L           #1,D4
+            CMP             #0,D4
+            BNE             BUCLE1
+
+
+            MOVE.L          #0,D0
+            MOVE.L          #13,D1
+            BSR             ESCCAR
 
             MOVE.L  #5,D0
             MOVE.L  #0,D1
