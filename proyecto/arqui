@@ -155,10 +155,13 @@ PRINT:  RTS
 
 
 
+
 P_INCORRECTO:   MOVE.L   #$ffffffff,D0
+                UNLK      A6            *Destrucción del marco de pila
                 RTS
 
 ERROR:          MOVE.L   #0,D0
+                UNLK      A6            *Destrucción del marco de pila
                 RTS
 
 **************************** SCAN ************************************************************
@@ -174,7 +177,7 @@ SCAN:     LINK      A6,#-8              *Creación del marco de pila (en este ca
           MOVE.L    #2000,D5
           CMP.L     D5,D1
           BGT       P_INCORRECTO
-          CMP.L     #1,D1               *Si Descriptor = 1
+          CMP.L     #1,D2               *Si Descriptor = 1
           BEQ       SC_LIN_B            *Saltamos a la línea B
           MOVE.L    #0,D0
           BSR       LINEA
@@ -200,7 +203,6 @@ SCAN_LEC1:MOVE.L    #0,D0
 
 
 SC_LIN_B:
-
 
 
 
@@ -649,11 +651,11 @@ INICIO:     BSR  INIT                 * Inicia el controlador
             MOVE.W  D1,(A7)
             MOVE.L  D2,-(A7)
             BSR SCAN
-            MOVE.L  (A7)+,D2
-            MOVE.L  (A7),D1
-            ADD.W   #2,A7
-            MOVE.L  (A7),D0
-            ADD.W   #2,A7
+            MOVE.L  (A7),D2
+            ADD.L   #2,A7
+            MOVE.W  (A7),D1
+            ADD.L   #2,A7
+            MOVE.W  (A7),D0
 
 
             BREAK
