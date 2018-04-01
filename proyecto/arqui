@@ -13,12 +13,13 @@
         bta:    DS.B    TAM_B     *13a2
         btb:    DS.B    TAM_B     *1b73
         bscan:  DS.B    2000      *2344
+        bprint: DS.B    2000      *272c
 
 
         *Punteros
 
 
-            bra_escritura:          DS.B  4
+            bra_escritura:          DS.B  4     
             bra_lectura:            DS.B  4
             bra_fin:                DS.B  4       *bd0
 
@@ -43,6 +44,10 @@
 
             bscan_inicio:           DS.B  4
             bscan_escritura:        DS.B  4
+
+
+            bprint_inicio:          DS.B  4
+            bprint_lectura:         DS.B  4
 
 
 * Definicion de equivalencias
@@ -148,36 +153,64 @@ INIT:
 
 
 
+
 **************************** PRINT ************************************************************
-PRINT:  RTS
+PRINT:    LINK      A6,#12              *Creación del marco de pila (en este caso para albergar 1 variable local)
+          MOVE.L    #0,D1
+          MOVE.L    #0,D2
+          MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
+          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)          
+          MOVE.L    #1,D4
+          CMP.L     D4,D2               *Comprobación de si los parámetros son correctos
+          BGT       P_INCORRECTO
+          CMP       #1,D2               *Si Descriptor = 1
+          BEQ       SC_LIN_B            *Saltamos a la línea B
+          MOVE.L    $8(A6),D3
+          MOVE.L    #0,-4(A6)           *Contador de caracteres aceptados -> marco de pila
+          MOVE.L    D3,-8(A6)           *puntero al buffer -> marco de pila
+          MOVE.L    D1,-12(A6)          *parametro tamaño como contador
+BUC_P1    MOVE.L    #2,D0
+          MOVE.L    -8(A6),D1
+          BSR       ESCCAR
+          CMP.L     #0,D0
+          BNE       LLENO
+          ADD.L     #1,-4(A6)           *+1 caracteres insertados
+          ADD.L     #1,-8(A6)           *Avanzamos el puntero del buffer
+          SUB.L     #1,-12(A6)          *-1 al tamaño
+          CMP.L     #0,-12(A6)
+          BNE       BUC_P1
+LLENO:    MOVE.L    -4(A6),D0
+          UNLK      A6
+
+
+
+          RTS
 
 **************************** FIN PRINT ********************************************************
 
 
 
-
 P_INCORRECTO:   MOVE.L   #$ffffffff,D0
-                UNLK      A6            *Destrucción del marco de pila
+                UNLK     A6      
                 RTS
 
 ERROR:          MOVE.L   #0,D0
-                UNLK      A6            *Destrucción del marco de pila
+                UNLK     A6
                 RTS
 
 **************************** SCAN ************************************************************
-SCAN:     LINK      A6,#-8              *Creación del marco de pila (en este caso para albergar 1 variable local)
+SCAN:     LINK      A6,#-12             *Creación del marco de pila (en este caso para albergar 1 variable local)
           MOVE.L    #0,D1
           MOVE.L    #0,D2
           MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
-          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)
-          MOVE.L    $8(A6),D3           *Pasar el valor del parámetro Buffer al registro deseado (en este caso D3)
+          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)          
           MOVE.L    #1,D4
           CMP.L     D4,D2               *Comprobación de si los parámetros son correctos
           BGT       P_INCORRECTO
-          MOVE.L    #2000,D5
+          MOVE.L    #2000,D5    
           CMP.L     D5,D1
           BGT       P_INCORRECTO
-          CMP.L     #1,D2               *Si Descriptor = 1
+          CMP       #1,D2               *Si Descriptor = 1
           BEQ       SC_LIN_B            *Saltamos a la línea B
           MOVE.L    #0,D0
           BSR       LINEA
@@ -186,37 +219,53 @@ SCAN:     LINK      A6,#-8              *Creación del marco de pila (en este ca
           MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
           CMP.L     D0,D1
           BGT       ERROR
+          MOVE.L    $8(A6),D3           *Pasar el valor del parámetro Buffer al registro deseado (en este caso D3)
           MOVE.L    D0,-4(A6)           *Guardamos en el marco de pila la longitud de la línea, que usaremos de contador
           MOVE.L    D0,-8(A6)           *Guardamos en el marco de pila la longitud de la línea (sin alterarlo para devolverlo)
-LECTURAS: MOVE.L    #0,D0
+          MOVE.L    D3,-12(A6)          *Guardamos el que será el puntero de escritura de SCAN (el parámetro Buffer al principio)
+LECT_1:   MOVE.L    #0,D0
           BSR       LEECAR              *Llamamos a LEECAR con parametro 0 (bra)
-          MOVE.L    bscan_escritura,A0  *Llevamos la posicion del puntero del buffer nuevo a A0
+          MOVE.L    -12(A6),D1          *Introducimos en D1 el puntero actual de escritura de SCAN
+          MOVE.L    D1,A0               *Llevamos la posición de memoria a A0
           MOVE.B    D0,(A0)             *Introducimos el carácter leido en la posicion de A0
           ADD.L     #1,A0               *Avanzamos el puntero
-          MOVE.L    A0,bscan_escritura  *Actualizamos el puntero
+          MOVE.L    A0,D1               *Posicion del puntero -> D1
+          MOVE.L    D1,-12(A6)          *Actualización del puntero
           SUB.L     #1,-4(A6)           *Restamos una iteración al contador
           CMP.L     #0,-4(A6)           *Comprobamos si hemos llegado al final
-          BNE       LECTURAS            *Si no es el final volvemos al bucle
+          BNE       LECT_1              *Si no es el final volvemos al bucle
           MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres leídos
 
-SC_LIN_B:
+SC_LIN_B: MOVE.L    #1,D0
+          BSR       LINEA
+          CMP.L     #0,D0
+          BEQ       ERROR
+          MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
+          CMP.L     D0,D1
+          BGT       ERROR
+          MOVE.L    $8(A6),D3           *Pasar el valor del parámetro Buffer al registro deseado (en este caso D3)
+          MOVE.L    D0,-4(A6)           *Guardamos en el marco de pila la longitud de la línea, que usaremos de contador
+          MOVE.L    D0,-8(A6)           *Guardamos en el marco de pila la longitud de la línea (sin alterarlo para devolverlo)
+          MOVE.L    D3,-12(A6)          *Guardamos el que será el puntero de escritura de SCAN (el parámetro Buffer al principio)
+LECT_2:   MOVE.L    #0,D0
+          BSR       LEECAR              *Llamamos a LEECAR con parametro 0 (bra)
+          MOVE.L    -12(A6),D1          *Introducimos en D1 el puntero actual de escritura de SCAN
+          MOVE.L    D1,A0               *Llevamos la posición de memoria a A0
+          MOVE.B    D0,(A0)             *Introducimos el carácter leido en la posicion de A0
+          ADD.L     #1,A0               *Avanzamos el puntero
+          MOVE.L    A0,D1               *Posicion del puntero -> D1
+          MOVE.L    D1,-12(A6)          *Actualización del puntero
+          SUB.L     #1,-4(A6)           *Restamos una iteración al contador
+          CMP.L     #0,-4(A6)           *Comprobamos si hemos llegado al final
+          BNE       LECT_2              *Si no es el final volvemos al bucle
+          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres leídos         
 
-
-
-
-
-
-
-
-          BREAK
-          UNLK      A6            *Destrucción del marco de pila
+          UNLK      A6                  *Destrucción del marco de pila
           RTS
 **************************** FIN SCAN ********************************************************
 
 
-
-
-VACIO:     MOVE.L      #$ffffffff,D0
+VACIO:    MOVE.L      #$ffffffff,D0
           RTS
 
 
@@ -632,29 +681,33 @@ NOLINEA:      MOVE.L       #0,D0
 
 
 
-  **************************** FIN LINEA ********************************************************
+**************************** FIN LINEA ********************************************************
 
 
 
 
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR  INIT                 * Inicia el controlador
+            
+            *MOVE.L  #5,D0
+            *MOVE.L  #0,D1
+            *MOVE.L  #bscan,D2
+            *SUB.L   #2,A7
+            *MOVE.W  D0,(A7)
+            *SUB.L   #2,A7
+            *MOVE.W  D1,(A7)
+            *MOVE.L  D2,-(A7)
+            *BSR SCAN
+            *MOVE.L  (A7)+,D2
+            *MOVE.W  (A7),D1
+            *ADD.L   #2,A7
+            *MOVE.W  (A7),D0
+            *ADD.L   #2,A7   
 
-            MOVE.L          #10,D4
-
-BUCLE1:     MOVE.L          #0,D0
-            MOVE.L          #157,D1
-            BSR             ESCCAR
-            SUB.L           #1,D4
-            CMP             #0,D4
-            BNE             BUCLE1
+            
 
 
-            MOVE.L          #0,D0
-            MOVE.L          #13,D1
-            BSR             ESCCAR
-
-            MOVE.L  #2001,D0
+            MOVE.L  #5,D0
             MOVE.L  #0,D1
             MOVE.L  #bscan,D2
             SUB.W   #2,A7
@@ -663,9 +716,6 @@ BUCLE1:     MOVE.L          #0,D0
             MOVE.W  D1,(A7)
             MOVE.L  D2,-(A7)
             BSR SCAN
-            MOVE.L  #0,D2
-            MOVE.L  #0,D1
-            MOVE.L  #0,D0
             MOVE.L  (A7),D2
             ADD.L   #2,A7
             MOVE.W  (A7),D1
