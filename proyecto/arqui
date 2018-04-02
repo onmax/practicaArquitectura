@@ -19,7 +19,7 @@
         *Punteros
 
 
-            bra_escritura:          DS.B  4
+            bra_escritura:          DS.B  4     
             bra_lectura:            DS.B  4
             bra_fin:                DS.B  4       *bd0
 
@@ -41,13 +41,6 @@
             btb_fin:                DS.B  4       *2343
 
 
-
-            bscan_inicio:           DS.B  4
-            bscan_escritura:        DS.B  4
-
-
-            bprint_inicio:          DS.B  4
-            bprint_lectura:         DS.B  4
 
 
 * Definicion de equivalencias
@@ -159,30 +152,42 @@ PRINT:    LINK      A6,#12              *Creación del marco de pila (en este ca
           MOVE.L    #0,D1
           MOVE.L    #0,D2
           MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
-          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)
+          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)          
           MOVE.L    #1,D4
           CMP.L     D4,D2               *Comprobación de si los parámetros son correctos
           BGT       P_INCORRECTO
-          CMP.L     #1,D2               *Si Descriptor = 1
-          BEQ       SC_LIN_B            *Saltamos a la línea B
           MOVE.L    $8(A6),D3
-
-          **La siguiente instruccion se puede hacer asi?? No seria $fffffffc == -4??
           MOVE.L    #0,-4(A6)           *Contador de caracteres aceptados -> marco de pila
           MOVE.L    D3,-8(A6)           *puntero al buffer -> marco de pila
           MOVE.L    D1,-12(A6)          *parametro tamaño como contador
+          CMP       #1,D2               *Si Descriptor = 1
+          BEQ       PR_LIN_B            *Saltamos a la línea B
+
 BUC_P1    MOVE.L    #2,D0
-          MOVE.L    -8(A6),D1
+          MOVE.L    -8(A6),A1
+          MOVE.B    (A1),D1
           BSR       ESCCAR
           CMP.L     #0,D0
-          BNE       LLENO
+          BNE       FIN                 *Si el buffer está lleno, saltamos al final
           ADD.L     #1,-4(A6)           *+1 caracteres insertados
           ADD.L     #1,-8(A6)           *Avanzamos el puntero del buffer
           SUB.L     #1,-12(A6)          *-1 al tamaño
           CMP.L     #0,-12(A6)
           BNE       BUC_P1
+          BRA       FIN
 
-LLENO:    MOVE.L    -4(A6),D0
+PR_LIN_B: MOVE.L    #3,D0
+          MOVE.L    -8(A6),A1
+          MOVE.B    (A1),D1
+          BSR       ESCCAR
+          CMP.L     #0,D0
+          BNE       FIN                 *Si el buffer está lleno, saltamos al final
+          ADD.L     #1,-4(A6)           *+1 caracteres insertados
+          ADD.L     #1,-8(A6)           *Avanzamos el puntero del buffer
+          SUB.L     #1,-12(A6)          *-1 al tamaño
+          CMP.L     #0,-12(A6)
+          BNE       PR_LIN_B
+FIN:      MOVE.L    -4(A6),D0
           UNLK      A6
           RTS
 
@@ -191,7 +196,7 @@ LLENO:    MOVE.L    -4(A6),D0
 
 
 P_INCORRECTO:   MOVE.L   #$ffffffff,D0
-                UNLK     A6
+                UNLK     A6      
                 RTS
 
 ERROR:          MOVE.L   #0,D0
@@ -199,15 +204,15 @@ ERROR:          MOVE.L   #0,D0
                 RTS
 
 **************************** SCAN ************************************************************
-SCAN:     LINK      A6,#-12             *Creación del marco de pila (en este caso para albergar 1 variable local)
+SCAN:     LINK      A6,#-12             *Creación del marco de pila (en este caso para albergar 3 variables locales)
           MOVE.L    #0,D1
           MOVE.L    #0,D2
           MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
-          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)
+          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)          
           MOVE.L    #1,D4
           CMP.L     D4,D2               *Comprobación de si los parámetros son correctos
           BGT       P_INCORRECTO
-          MOVE.L    #2000,D5
+          MOVE.L    #2000,D5    
           CMP.L     D5,D1
           BGT       P_INCORRECTO
           CMP       #1,D2               *Si Descriptor = 1
@@ -249,23 +254,16 @@ SC_LIN_B: MOVE.L    #1,D0
           MOVE.L    D3,-12(A6)          *Guardamos el que será el puntero de escritura de SCAN (el parámetro Buffer al principio)
 LECT_2:   MOVE.L    #0,D0
           BSR       LEECAR              *Llamamos a LEECAR con parametro 0 (bra)
-
-
-          **La siguiente instruccion se puede hacer asi?? No seria $fffffff4 == -12
           MOVE.L    -12(A6),D1          *Introducimos en D1 el puntero actual de escritura de SCAN
           MOVE.L    D1,A0               *Llevamos la posición de memoria a A0
           MOVE.B    D0,(A0)             *Introducimos el carácter leido en la posicion de A0
           ADD.L     #1,A0               *Avanzamos el puntero
           MOVE.L    A0,D1               *Posicion del puntero -> D1
-
-          **La siguiente instruccion se puede hacer asi?? No seria $fffffff4 == -12
           MOVE.L    D1,-12(A6)          *Actualización del puntero
           SUB.L     #1,-4(A6)           *Restamos una iteración al contador
           CMP.L     #0,-4(A6)           *Comprobamos si hemos llegado al final
           BNE       LECT_2              *Si no es el final volvemos al bucle
-
-          **Refrito
-          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres leídos
+          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres leídos         
 
           UNLK      A6                  *Destrucción del marco de pila
           RTS
@@ -695,39 +693,28 @@ NOLINEA:      MOVE.L       #0,D0
 
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR  INIT                 * Inicia el controlador
+            
+            
 
-            *MOVE.L  #5,D0
-            *MOVE.L  #0,D1
-            *MOVE.L  #bscan,D2
-            *SUB.L   #2,A7
-            *MOVE.W  D0,(A7)
-            *SUB.L   #2,A7
-            *MOVE.W  D1,(A7)
-            *MOVE.L  D2,-(A7)
-            *BSR SCAN
-            *MOVE.L  (A7)+,D2
-            *MOVE.W  (A7),D1
-            *ADD.L   #2,A7
-            *MOVE.W  (A7),D0
-            *ADD.L   #2,A7
-
-
+            
 
 
             MOVE.L  #5,D0
             MOVE.L  #0,D1
-            MOVE.L  #bscan,D2
+            MOVE.L  #bprint,D2
             SUB.W   #2,A7
             MOVE.W  D0,(A7)
             SUB.W   #2,A7
             MOVE.W  D1,(A7)
             MOVE.L  D2,-(A7)
-            BSR SCAN
+            BSR PRINT
             MOVE.L  (A7),D2
             ADD.L   #2,A7
             MOVE.W  (A7),D1
             ADD.L   #2,A7
             MOVE.W  (A7),D0
+
+          
 
 
             BREAK
