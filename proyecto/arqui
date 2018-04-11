@@ -8,18 +8,19 @@
         *Declaracion de buffers
         TAM_B:  EQU     2001
 
-        bra:    DS.B    TAM_B     *400
-        brb:    DS.B    TAM_B     *bd1
-        bta:    DS.B    TAM_B     *13a2
-        btb:    DS.B    TAM_B     *1b73
-        bscan:  DS.B    2000      *2344
-        bprint: DS.B    2000      *272c
+        bra:      DS.B    TAM_B     *400
+        brb:      DS.B    TAM_B     *bd1
+        bta:      DS.B    TAM_B     *13a2
+        btb:      DS.B    TAM_B     *1b73
+        bscan:    DS.B    2000      *2344
+        bprint:   DS.B    2000      *272c
+        copiaIMR: DS.B    1     
 
 
         *Punteros
 
 
-            bra_escritura:          DS.B  4
+            bra_escritura:          DS.B  4     
             bra_lectura:            DS.B  4
             bra_fin:                DS.B  4       *bd0
 
@@ -82,15 +83,16 @@ INIT:
         MOVE.B          #%00000011,MR1B     * 8 bits por caracter y solicita interrupcion
         MOVE.B          #%00000000,MR2A     * Eco desactivado.
         MOVE.B          #%00000000,MR2B     * Eco desactivado.
+        MOVE.B          #%00000000,ACR      * Conjunto 1 de velocidades
         MOVE.B          #%11001100,CSRA     * Velocidad = 38400 bps.
-        MOVE.B          #%11001100,CSRB     * Velocidad = 38400 bps.
-        MOVE.B          #%00000000,ACR      * Velocidad = 38400 bps.
+        MOVE.B          #%11001100,CSRB     * Velocidad = 38400 bps. 
         MOVE.B          #%00000101,CRA      * Transmision y recepcion activados. Full Duplex.
         MOVE.B          #%00000101,CRB      * Transmision y recepcion activados. Full Duplex.
-        MOVE.B          #%00000000,ISR      * Activar mascara de interrupcion (lectura)
-        MOVE.B          #%01000000,IVR      * Vector de interrupcion en 64 (decimal), 40(hexadecimal).
+        MOVE.B          #%00100010,IMR      * Habilitadas las interrupciones de recepción
+        MOVE.B          #$40,IVR            * Vector de interrupcion 40(hexadecimal)(RTI en posicion 100 hexadecimal)
                                             * RTI habra que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
         **NOTA: Creemos que hay que ir cambiando ISR y IMR
+        **RESPUESTA: Hat que cambiar IMR(interrupción de escritura), ISR se cambia solo (interrupcion de lectura)
 
         MOVE.L  #TAM_B,D0
         SUB.L   #1,D0
@@ -101,7 +103,7 @@ INIT:
         MOVE.L  #bra,bra_lectura
         MOVE.L  #bra,A0
         MOVE.L  A0,D1
-        ADD.L   D0,D1               *Posicion efectiva del final en D1
+        ADD.L   D0,D1                   *Posicion efectiva del final en D1
         MOVE.L  D1,bra_fin
 
 
@@ -128,6 +130,10 @@ INIT:
         ADD.L   D0,D1                   *Posicion efectiva del final en D1
         MOVE.L  D1,btb_fin
 
+        MOVE.L  IMR,A0
+        MOVE.L  (A0),D0
+        MOVE.L  D0,copiaIMR             *Se realiza la copia de IMR 
+
 
         MOVE.L  #bscan,bscan_inicio
         MOVE.L  #bscan,bscan_escritura
@@ -138,8 +144,26 @@ INIT:
 
 
 
-
+ORG   $100
 **************************** RTI ************************************************************
+
+         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 **************************** FIN RTI ********************************************************
 
@@ -147,12 +171,15 @@ INIT:
 
 
 
+                  
+
+
 **************************** PRINT ************************************************************
-PRINT:    LINK      A6,#12              *Creación del marco de pila (en este caso para albergar 1 variable local)
+PRINT:    LINK      A6,#16              *Creación del marco de pila
           MOVE.L    #0,D1
           MOVE.L    #0,D2
           MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
-          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)
+          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)          
           MOVE.L    #1,D4
           CMP.L     D4,D2               *Comprobación de si los parámetros son correctos
           BGT       P_INCORRECTO
@@ -169,11 +196,15 @@ BUC_P1:   MOVE.L    #2,D0
           BSR       ESCCAR
           CMP.L     #0,D0
           BNE       FIN                 *Si el buffer está lleno, saltamos al final
-          ADD.L     #1,-4(A6)           *+1 caracteres insertados
+          CMP.L     #13,D0
+          BEQ       RET_CARRO
+SEGUIR:   ADD.L     #1,-4(A6)           *+1 caracteres insertados
           ADD.L     #1,-8(A6)           *Avanzamos el puntero del buffer
           SUB.L     #1,-12(A6)          *-1 al tamaño
           CMP.L     #0,-12(A6)
           BNE       BUC_P1
+          CMP.L     -16(A6), #1
+          BEQ       INTER_A
           BRA       FIN
 
 PR_LIN_B: MOVE.L    #3,D0
@@ -182,37 +213,57 @@ PR_LIN_B: MOVE.L    #3,D0
           BSR       ESCCAR
           CMP.L     #0,D0
           BNE       FIN                 *Si el buffer está lleno, saltamos al final
-          ADD.L     #1,-4(A6)           *+1 caracteres insertados
+          CMP.L     #13,D0
+          BEQ       RET_CARRO
+SEGUIR:   ADD.L     #1,-4(A6)           *+1 caracteres insertados
           ADD.L     #1,-8(A6)           *Avanzamos el puntero del buffer
           SUB.L     #1,-12(A6)          *-1 al tamaño
           CMP.L     #0,-12(A6)
           BNE       PR_LIN_B
+          CMP.L     -16(A6),#1
+          BEQ       INTER_B
 FIN:      MOVE.L    -4(A6),D0
           UNLK      A6
           RTS
+
+
+
+RET_CARRO:  MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de carro
+            BRA      SEGUIR
+
+INTER_A:    MOVE.B   #%00100011,copiaIMR          *Habilitamos las interrupciones de transmisión de A en la copia del IMR
+            MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia
+            AND.L    ISR,copiaIMR
+            BSR      IVR                          *Supuestamente accedemos  a la RTI
+            MOVE.B   #%00100010,copiaIMR          *Deshabilitamos las interrupciones de transmision
+            MOVE.L   copiaIMR,IMR
+            BRA FIN
+
+
+INTER_B:    MOVE.B   #%00110010,copiaIMR          *Habilitamos las interrupciones de transmisión de A en la copia del IMR
+            MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia
+            AND.L    ISR,copiaIMR
+            BSR      IVR
+            MOVE.B   #%00100010,copiaIMR          *Supuestamente accedemos  a la RTI
+            MOVE.L   copiaIMR,IMR
+            BRA FIN                               *Deshabilitamos las interrupciones de transmision
 
 **************************** FIN PRINT ********************************************************
 
 
 
-P_INCORRECTO:   MOVE.L   #$ffffffff,D0
-                UNLK     A6
-                RTS
 
-ERROR:          MOVE.L   #0,D0
-                UNLK     A6
-                RTS
 
 **************************** SCAN ************************************************************
 SCAN:     LINK      A6,#-12             *Creación del marco de pila (en este caso para albergar 3 variables locales)
           MOVE.L    #0,D1
           MOVE.L    #0,D2
           MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
-          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)
+          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)          
           MOVE.L    #1,D4
           CMP.L     D4,D2               *Comprobación de si los parámetros son correctos
           BGT       P_INCORRECTO
-          MOVE.L    #2000,D5
+          MOVE.L    #2000,D5    
           CMP.L     D5,D1
           BGT       P_INCORRECTO
           CMP       #1,D2               *Si Descriptor = 1
@@ -263,15 +314,25 @@ LECT_2:   MOVE.L    #0,D0
           SUB.L     #1,-4(A6)           *Restamos una iteración al contador
           CMP.L     #0,-4(A6)           *Comprobamos si hemos llegado al final
           BNE       LECT_2              *Si no es el final volvemos al bucle
-          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres leídos
+          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres leídos         
 
           UNLK      A6                  *Destrucción del marco de pila
           RTS
+
+
+
+
+P_INCORRECTO:   MOVE.L   #$ffffffff,D0
+                UNLK     A6      
+                RTS
+
+ERROR:          MOVE.L   #0,D0
+                UNLK     A6
+                RTS
 **************************** FIN SCAN ********************************************************
 
 
-VACIO:    MOVE.L      #$ffffffff,D0
-          RTS
+
 
 
 **************************** LEECAR ************************************************************
@@ -297,7 +358,7 @@ LEECAR:   MOVE.L      D0,D2           *Buffer a D2
                         BEQ         LBTB_BF
 
                         ADD.L       #1,D4               *Puntero de lectura + 1
-                        MOVE.L      D4,A0               *Nueva posicion del puntero de lectura -> A0
+                        MVE.LO      D4,A0               *Nueva posicion del puntero de lectura -> A0
                         MOVE.L      A0,btb_lectura      *Actualizamos el puntero
                         RTS
 
@@ -373,12 +434,13 @@ LBRB_BF:  MOVE.L      #brb,brb_lectura
           RTS
 
 
+VACIO:    MOVE.L      #$ffffffff,D0
+          RTS
 
 **************************** FIN LEECAR ********************************************************
 
 
-LLENO:      MOVE.L      #$ffffffff,D0
-            RTS
+
 
 
 **************************** ESCCAR ************************************************************
@@ -523,11 +585,13 @@ BRB_FB:     MOVE.L      #brb,A3
             RTS
 
 
+
+LLENO:      MOVE.L      #$ffffffff,D0
+            RTS
+
+
 **************************** FIN ESCCAR ********************************************************
 
-
-NOLINEA:      MOVE.L       #0,D0
-              RTS
 
 
 **************************** LINEA ************************************************************
@@ -685,6 +749,8 @@ NOLINEA:      MOVE.L       #0,D0
         FBRALIN: RTS
 
 
+NOLINEA:      MOVE.L       #0,D0
+              RTS
 
 **************************** FIN LINEA ********************************************************
 
@@ -693,19 +759,10 @@ NOLINEA:      MOVE.L       #0,D0
 
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR  INIT                 * Inicia el controlador
+            
+            
 
-
-
-            MOVE.L 0,D0
-            MOVE.L #151,D1
-BUCLE:      MOVE.L #bprint,A0
-            MOVE.L D1,A0
-            ADD.L  A0,1
-            MOVE.L A0,bprint
-            ADD.L #1,D0
-            CMP.L D0,#20
-            BNE BUCLE
-
+            
 
 
             MOVE.L  #5,D0
@@ -723,7 +780,7 @@ BUCLE:      MOVE.L #bprint,A0
             ADD.L   #2,A7
             MOVE.W  (A7),D0
 
-
+          
 
 
             BREAK
