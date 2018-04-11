@@ -135,19 +135,14 @@ INIT:
         MOVE.L  D0,copiaIMR             *Se realiza la copia de IMR 
 
 
-        MOVE.L  #bscan,bscan_inicio
-        MOVE.L  #bscan,bscan_escritura
-
-
         RTS
 **************************** FIN INIT *********************************************************
 
 
 
-ORG   $100
 **************************** RTI ************************************************************
 
-         
+  
 
 
 
@@ -188,7 +183,7 @@ PRINT:    LINK      A6,#16              *Creación del marco de pila
           MOVE.L    D3,-8(A6)           *puntero al buffer -> marco de pila
           MOVE.L    D1,-12(A6)          *parametro tamaño como contador
           CMP       #1,D2               *Si Descriptor = 1
-          BEQ       PR_LIN_B            *Saltamos a la línea B
+          BEQ       BUC_P2              *Saltamos a la línea B
 
 BUC_P1:   MOVE.L    #2,D0
           MOVE.L    -8(A6),A1
@@ -197,30 +192,36 @@ BUC_P1:   MOVE.L    #2,D0
           CMP.L     #0,D0
           BNE       FIN                 *Si el buffer está lleno, saltamos al final
           CMP.L     #13,D0
-          BEQ       RET_CARRO
-SEGUIR:   ADD.L     #1,-4(A6)           *+1 caracteres insertados
+          BEQ       RTC_A
+SEG_A:    ADD.L     #1,-4(A6)           *+1 caracteres insertados
           ADD.L     #1,-8(A6)           *Avanzamos el puntero del buffer
           SUB.L     #1,-12(A6)          *-1 al tamaño
           CMP.L     #0,-12(A6)
           BNE       BUC_P1
-          CMP.L     -16(A6), #1
+          MOVE.L    -16(A6),A5
+          MOVE.L    (A5),D7
+          MOVE.L    #1,D6
+          CMP.L     D7,D6
           BEQ       INTER_A
           BRA       FIN
 
-PR_LIN_B: MOVE.L    #3,D0
+BUC_P2:   MOVE.L    #3,D0
           MOVE.L    -8(A6),A1
           MOVE.B    (A1),D1
           BSR       ESCCAR
           CMP.L     #0,D0
           BNE       FIN                 *Si el buffer está lleno, saltamos al final
           CMP.L     #13,D0
-          BEQ       RET_CARRO
-SEGUIR:   ADD.L     #1,-4(A6)           *+1 caracteres insertados
+          BEQ       RTC_B
+SEG_B:    ADD.L     #1,-4(A6)           *+1 caracteres insertados
           ADD.L     #1,-8(A6)           *Avanzamos el puntero del buffer
           SUB.L     #1,-12(A6)          *-1 al tamaño
           CMP.L     #0,-12(A6)
-          BNE       PR_LIN_B
-          CMP.L     -16(A6),#1
+          BNE       BUC_P2
+          MOVE.L    -16(A6),A5
+          MOVE.L    (A5),D7
+          MOVE.L    #1,D6
+          CMP.L     D7,D6
           BEQ       INTER_B
 FIN:      MOVE.L    -4(A6),D0
           UNLK      A6
@@ -228,25 +229,21 @@ FIN:      MOVE.L    -4(A6),D0
 
 
 
-RET_CARRO:  MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de carro
-            BRA      SEGUIR
+RTC_A:      MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de carro
+            BRA      SEG_A
+
+
+RTC_B:      MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de carro
+            BRA      SEG_B
 
 INTER_A:    MOVE.B   #%00100011,copiaIMR          *Habilitamos las interrupciones de transmisión de A en la copia del IMR
-            MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia
-            AND.L    ISR,copiaIMR
-            BSR      IVR                          *Supuestamente accedemos  a la RTI
-            MOVE.B   #%00100010,copiaIMR          *Deshabilitamos las interrupciones de transmision
-            MOVE.L   copiaIMR,IMR
+            MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia            
             BRA FIN
 
 
 INTER_B:    MOVE.B   #%00110010,copiaIMR          *Habilitamos las interrupciones de transmisión de A en la copia del IMR
-            MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia
-            AND.L    ISR,copiaIMR
-            BSR      IVR
-            MOVE.B   #%00100010,copiaIMR          *Supuestamente accedemos  a la RTI
-            MOVE.L   copiaIMR,IMR
-            BRA FIN                               *Deshabilitamos las interrupciones de transmision
+            MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia           
+            BRA FIN                               
 
 **************************** FIN PRINT ********************************************************
 
@@ -358,7 +355,7 @@ LEECAR:   MOVE.L      D0,D2           *Buffer a D2
                         BEQ         LBTB_BF
 
                         ADD.L       #1,D4               *Puntero de lectura + 1
-                        MVE.LO      D4,A0               *Nueva posicion del puntero de lectura -> A0
+                        MOVE.L     D4,A0               *Nueva posicion del puntero de lectura -> A0
                         MOVE.L      A0,btb_lectura      *Actualizamos el puntero
                         RTS
 
