@@ -14,7 +14,7 @@
         btb:      DS.B    TAM_B     *1b73
         bscan:    DS.B    2000      *2344
         bprint:   DS.B    2000      *272c
-        copiaIMR: DS.B    1     
+        copiaIMR: DS.B    4     
 
 
         *Punteros
@@ -77,8 +77,8 @@ IVR     EQU     $effc19       * de control auxiliar
 
 
 **************************** INIT *************************************************************
-INIT:
-        MOVE.B          #%00010000,CRA      * Reinicia el puntero MR1
+INIT:   MOVE.B          #%00010000,CRA      * Reinicia el puntero a MR1A
+        MOVE.B          #%00010000,CRB      * Reinicia el puntero a MR1B
         MOVE.B          #%00000011,MR1A     * 8 bits por caracter y solicita interrupcion
         MOVE.B          #%00000011,MR1B     * 8 bits por caracter y solicita interrupcion
         MOVE.B          #%00000000,MR2A     * Eco desactivado.
@@ -88,12 +88,10 @@ INIT:
         MOVE.B          #%11001100,CSRB     * Velocidad = 38400 bps. 
         MOVE.B          #%00000101,CRA      * Transmision y recepcion activados. Full Duplex.
         MOVE.B          #%00000101,CRB      * Transmision y recepcion activados. Full Duplex.
-        MOVE.B          #%00100010,IMR      * Habilitadas las interrupciones de recepción
+        MOVE.B          #%00100010,IMR      * Habilitadas las interrupciones de recepci?n
         MOVE.B          #$40,IVR            * Vector de interrupcion 40(hexadecimal)(RTI en posicion 100 hexadecimal)
-                                            * RTI habra que colocarlo en => 64 x 4 = 256 (decimal) = 100(hexadecimal)
-        **NOTA: Creemos que hay que ir cambiando ISR y IMR
-        **RESPUESTA: Hat que cambiar IMR(interrupción de escritura), ISR se cambia solo (interrupcion de lectura)
-
+        MOVE.B          #RTI,$100           * RTI en la posici?n 100 (hexadecimal)                                    
+        
         MOVE.L  #TAM_B,D0
         SUB.L   #1,D0
 
@@ -106,14 +104,12 @@ INIT:
         ADD.L   D0,D1                   *Posicion efectiva del final en D1
         MOVE.L  D1,bra_fin
 
-
         MOVE.L  #brb,brb_escritura
         MOVE.L  #brb,brb_lectura
         MOVE.L  #brb,A0
         MOVE.L  A0,D1
         ADD.L   D0,D1                   *Posicion efectiva del final en D1
         MOVE.L  D1,brb_fin
-
 
         MOVE.L  #bta,bta_escritura      *bta_escritura apunta donde apunta bta
         MOVE.L  #bta,bta_lectura
@@ -122,18 +118,12 @@ INIT:
         ADD.L   D0,D1                   *Posicion efectiva del final en D1
         MOVE.L  D1,bta_fin
 
-
         MOVE.L  #btb,btb_escritura
         MOVE.L  #btb,btb_lectura
         MOVE.L  #btb,A0
         MOVE.L  A0,D1
         ADD.L   D0,D1                   *Posicion efectiva del final en D1
-        MOVE.L  D1,btb_fin
-
-        MOVE.L  IMR,A0
-        MOVE.L  (A0),D0
-        MOVE.L  D0,copiaIMR             *Se realiza la copia de IMR 
-
+        MOVE.L  D1,btb_fin 
 
         RTS
 **************************** FIN INIT *********************************************************
@@ -142,22 +132,13 @@ INIT:
 
 **************************** RTI ************************************************************
 
-  
+RTI:
+      
 
 
+      
 
-
-
-
-
-
-
-
-
-
-
-
-
+      RTS
 
 
 **************************** FIN RTI ********************************************************
@@ -170,32 +151,34 @@ INIT:
 
 
 **************************** PRINT ************************************************************
-PRINT:    LINK      A6,#16              *Creación del marco de pila
+PRINT:    LINK      A6,#16              *Creaci?n del marco de pila
           MOVE.L    #0,D1
           MOVE.L    #0,D2
-          MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
-          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)          
+          MOVE.W    $e(A6),D1           *Pasar el valor del par?metro Tama?o al registro deseado (en este caso D1)
+          CMP.L     D2,D1
+          BEQ       FIN
+          MOVE.W    $c(A6),D2           *Pasar el valor del par?metro Descriptor al registro deseado (en este caso D2)          
           MOVE.L    #1,D4
-          CMP.L     D4,D2               *Comprobación de si los parámetros son correctos
+          CMP.L     D4,D2               *Comprobaci?n de si los par?metros son correctos
           BGT       P_INCORRECTO
           MOVE.L    $8(A6),D3
           MOVE.L    #0,-4(A6)           *Contador de caracteres aceptados -> marco de pila
           MOVE.L    D3,-8(A6)           *puntero al buffer -> marco de pila
-          MOVE.L    D1,-12(A6)          *parametro tamaño como contador
+          MOVE.L    D1,-12(A6)          *parametro tama?o como contador
           CMP       #1,D2               *Si Descriptor = 1
-          BEQ       BUC_P2              *Saltamos a la línea B
+          BEQ       BUC_P2              *Saltamos a la l?nea B
 
 BUC_P1:   MOVE.L    #2,D0
           MOVE.L    -8(A6),A1
           MOVE.B    (A1),D1
           BSR       ESCCAR
           CMP.L     #0,D0
-          BNE       FIN                 *Si el buffer está lleno, saltamos al final
+          BNE       FIN                 *Si el buffer est? lleno, saltamos al final
           CMP.L     #13,D0
           BEQ       RTC_A
 SEG_A:    ADD.L     #1,-4(A6)           *+1 caracteres insertados
           ADD.L     #1,-8(A6)           *Avanzamos el puntero del buffer
-          SUB.L     #1,-12(A6)          *-1 al tamaño
+          SUB.L     #1,-12(A6)          *-1 al tama?o
           CMP.L     #0,-12(A6)
           BNE       BUC_P1
           MOVE.L    -16(A6),A5
@@ -210,12 +193,12 @@ BUC_P2:   MOVE.L    #3,D0
           MOVE.B    (A1),D1
           BSR       ESCCAR
           CMP.L     #0,D0
-          BNE       FIN                 *Si el buffer está lleno, saltamos al final
+          BNE       FIN                 *Si el buffer est? lleno, saltamos al final
           CMP.L     #13,D0
           BEQ       RTC_B
 SEG_B:    ADD.L     #1,-4(A6)           *+1 caracteres insertados
           ADD.L     #1,-8(A6)           *Avanzamos el puntero del buffer
-          SUB.L     #1,-12(A6)          *-1 al tamaño
+          SUB.L     #1,-12(A6)          *-1 al tama?o
           CMP.L     #0,-12(A6)
           BNE       BUC_P2
           MOVE.L    -16(A6),A5
@@ -228,95 +211,84 @@ FIN:      MOVE.L    -4(A6),D0
           RTS
 
 
+RTC_A:    MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de carro
+          BRA      SEG_A
 
-RTC_A:      MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de carro
-            BRA      SEG_A
+RTC_B:    MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de carro
+          BRA      SEG_B
 
+INTER_A:  MOVE.B   #%00100011,copiaIMR          *Habilitamos las interrupciones de transmisi?n de A en la copia del IMR
+          MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia            
+          BRA FIN
 
-RTC_B:      MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de carro
-            BRA      SEG_B
-
-INTER_A:    MOVE.B   #%00100011,copiaIMR          *Habilitamos las interrupciones de transmisión de A en la copia del IMR
-            MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia            
-            BRA FIN
-
-
-INTER_B:    MOVE.B   #%00110010,copiaIMR          *Habilitamos las interrupciones de transmisión de A en la copia del IMR
-            MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia           
-            BRA FIN                               
+INTER_B:  MOVE.B   #%00110010,copiaIMR          *Habilitamos las interrupciones de transmisi?n de A en la copia del IMR
+          MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia           
+          BRA FIN                               
 
 **************************** FIN PRINT ********************************************************
 
 
 
-
-
 **************************** SCAN ************************************************************
-SCAN:     LINK      A6,#-12             *Creación del marco de pila (en este caso para albergar 3 variables locales)
+SCAN:     LINK      A6,#-12             *Creaci?n del marco de pila (en este caso para albergar 3 variables locales)
           MOVE.L    #0,D1
           MOVE.L    #0,D2
-          MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
-          MOVE.W    $c(A6),D2           *Pasar el valor del parámetro Descriptor al registro deseado (en este caso D2)          
-          MOVE.L    #1,D4
-          CMP.L     D4,D2               *Comprobación de si los parámetros son correctos
-          BGT       P_INCORRECTO
-          MOVE.L    #2000,D5    
-          CMP.L     D5,D1
+          MOVE.W    $e(A6),D1           *Pasar el valor del par?metro Tama?o al registro deseado (en este caso D1)
+          MOVE.W    $c(A6),D2           *Pasar el valor del par?metro Descriptor al registro deseado (en este caso D2)          
+          CMP.L     #1,D2               *Comprobaci?n de si los par?metros son correctos
+          BGT       P_INCORRECTO   
+          CMP.L     #2000,D1
           BGT       P_INCORRECTO
           CMP       #1,D2               *Si Descriptor = 1
-          BEQ       SC_LIN_B            *Saltamos a la línea B
+          BEQ       SC_LIN_B            *Saltamos a la l?nea B
           MOVE.L    #0,D0
           BSR       LINEA
           CMP.L     #0,D0
           BEQ       ERROR
-          MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
+          MOVE.W    $e(A6),D1           *Pasar el valor del par?metro Tama?o al registro deseado (en este caso D1)
           CMP.L     D0,D1
           BGT       ERROR
-          MOVE.L    $8(A6),D3           *Pasar el valor del parámetro Buffer al registro deseado (en este caso D3)
-          MOVE.L    D0,-4(A6)           *Guardamos en el marco de pila la longitud de la línea, que usaremos de contador
-          MOVE.L    D0,-8(A6)           *Guardamos en el marco de pila la longitud de la línea (sin alterarlo para devolverlo)
-          MOVE.L    D3,-12(A6)          *Guardamos el que será el puntero de escritura de SCAN (el parámetro Buffer al principio)
+          MOVE.L    $8(A6),D3           *Pasar el valor del par?metro Buffer al registro deseado (en este caso D3)
+          MOVE.L    D0,-4(A6)           *Guardamos en el marco de pila la longitud de la l?nea, que usaremos de contador
+          MOVE.L    D0,-8(A6)           *Guardamos en el marco de pila la longitud de la l?nea (sin alterarlo para devolverlo)
+          MOVE.L    D3,-12(A6)          *Guardamos el que ser? el puntero de escritura de SCAN (el par?metro Buffer al principio)
 LECT_1:   MOVE.L    #0,D0
           BSR       LEECAR              *Llamamos a LEECAR con parametro 0 (bra)
-          MOVE.L    -12(A6),D1          *Introducimos en D1 el puntero actual de escritura de SCAN
-          MOVE.L    D1,A0               *Llevamos la posición de memoria a A0
-          MOVE.B    D0,(A0)             *Introducimos el carácter leido en la posicion de A0
-          ADD.L     #1,A0               *Avanzamos el puntero
-          MOVE.L    A0,D1               *Posicion del puntero -> D1
-          MOVE.L    D1,-12(A6)          *Actualización del puntero
+          MOVE.L    D0,-12(A6)          *Introducimos en D1 el puntero actual de escritura de SCAN
+          MOVE.L    D1,A0               *Llevamos la posici?n de memoria a A0
+          MOVE.B    D0,(A0)             *Introducimos el carácter leído en el buffer
+          ADD.L     #1,-12(A6)          *Avanzamos el puntero
           SUB.L     #1,-4(A6)           *Restamos una iteración al contador
           CMP.L     #0,-4(A6)           *Comprobamos si hemos llegado al final
           BNE       LECT_1              *Si no es el final volvemos al bucle
-          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres leídos
+          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres le?dos
 
 SC_LIN_B: MOVE.L    #1,D0
           BSR       LINEA
           CMP.L     #0,D0
           BEQ       ERROR
-          MOVE.W    $e(A6),D1           *Pasar el valor del parámetro Tamaño al registro deseado (en este caso D1)
+          MOVE.W    $e(A6),D1           *Pasar el valor del par?metro Tama?o al registro deseado (en este caso D1)
           CMP.L     D0,D1
           BGT       ERROR
-          MOVE.L    $8(A6),D3           *Pasar el valor del parámetro Buffer al registro deseado (en este caso D3)
-          MOVE.L    D0,-4(A6)           *Guardamos en el marco de pila la longitud de la línea, que usaremos de contador
-          MOVE.L    D0,-8(A6)           *Guardamos en el marco de pila la longitud de la línea (sin alterarlo para devolverlo)
-          MOVE.L    D3,-12(A6)          *Guardamos el que será el puntero de escritura de SCAN (el parámetro Buffer al principio)
+          MOVE.L    $8(A6),D3           *Pasar el valor del par?metro Buffer al registro deseado (en este caso D3)
+          MOVE.L    D0,-4(A6)           *Guardamos en el marco de pila la longitud de la l?nea, que usaremos de contador
+          MOVE.L    D0,-8(A6)           *Guardamos en el marco de pila la longitud de la l?nea (sin alterarlo para devolverlo)
+          MOVE.L    D3,-12(A6)          *Guardamos el que ser? el puntero de escritura de SCAN (el par?metro Buffer al principio)
 LECT_2:   MOVE.L    #0,D0
           BSR       LEECAR              *Llamamos a LEECAR con parametro 0 (bra)
           MOVE.L    -12(A6),D1          *Introducimos en D1 el puntero actual de escritura de SCAN
-          MOVE.L    D1,A0               *Llevamos la posición de memoria a A0
-          MOVE.B    D0,(A0)             *Introducimos el carácter leido en la posicion de A0
+          MOVE.L    D1,A0               *Llevamos la posici?n de memoria a A0
+          MOVE.B    D0,(A0)             *Introducimos el car?cter leido en la posicion de A0
           ADD.L     #1,A0               *Avanzamos el puntero
           MOVE.L    A0,D1               *Posicion del puntero -> D1
-          MOVE.L    D1,-12(A6)          *Actualización del puntero
-          SUB.L     #1,-4(A6)           *Restamos una iteración al contador
+          MOVE.L    D1,-12(A6)          *Actualizaci?n del puntero
+          SUB.L     #1,-4(A6)           *Restamos una iteraci?n al contador
           CMP.L     #0,-4(A6)           *Comprobamos si hemos llegado al final
           BNE       LECT_2              *Si no es el final volvemos al bucle
-          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres leídos         
+          MOVE.L    -8(A6),D0           *Devolvemos en D0 el numero de caracteres le?dos         
 
-          UNLK      A6                  *Destrucción del marco de pila
+          UNLK      A6                  *Destrucci?n del marco de pila
           RTS
-
-
 
 
 P_INCORRECTO:   MOVE.L   #$ffffffff,D0
@@ -327,8 +299,6 @@ ERROR:          MOVE.L   #0,D0
                 UNLK     A6
                 RTS
 **************************** FIN SCAN ********************************************************
-
-
 
 
 
@@ -438,8 +408,6 @@ VACIO:    MOVE.L      #$ffffffff,D0
 
 
 
-
-
 **************************** ESCCAR ************************************************************
 ESCCAR:     MOVE.L      D0,D2           *Buffer a D2
             MOVE.L      #0,D3           *D3 a cero
@@ -481,8 +449,6 @@ BTB_FB:     MOVE.L      #btb,A3
             MOVE.L      #0,D0
             RTS
 
-
-
 E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             BEQ         EC_BRA
 
@@ -494,7 +460,7 @@ E_LIN_A:    BTST        #1,D2            *Se repite el mismo esquema que LIN_B
             MOVE.L      bta_fin,A2          *Puntero de fin -> A2
             MOVE.L      A2,D6
             MOVE.B      D3,(A0)             *Se escribe el caracter en el buffer
-            CMP.L       D2,D6               *¿Escritura = FIN?
+            CMP.L       D2,D6               *?Escritura = FIN?
             BEQ         BTA_BF
 
             MOVE.L      A0,D7               *Puntero de escritura -> D7
@@ -548,8 +514,6 @@ BRA_FB:     MOVE.L      #bra,A3
             MOVE.L      #0,D0
             RTS
 
-
-
 *******Buffer recepcion B***************
 EC_BRB:     MOVE.L      brb_escritura,A0
             MOVE.L      A0,D2
@@ -581,11 +545,8 @@ BRB_FB:     MOVE.L      #brb,A3
             MOVE.L      #0,D0
             RTS
 
-
-
 LLENO:      MOVE.L      #$ffffffff,D0
             RTS
-
 
 **************************** FIN ESCCAR ********************************************************
 
@@ -595,10 +556,8 @@ LLENO:      MOVE.L      #$ffffffff,D0
   LINEA:      MOVE.L      D0,D2           *Buffer a D2
               BTST        #0,D2           *Si el bit 0 == 0 --> Ir a linea A
               BEQ         LI_LIN_A         *EOC --> Ir a B
-
               BTST        #1,D2           *Si el bit 1 == 0 --> Ir a recepcion
               BEQ         LI_BRB          *EOC --> Ir a transmision
-
 
       ******Buffer transmision B**************
 
@@ -612,20 +571,15 @@ LLENO:      MOVE.L      #$ffffffff,D0
               MOVE.L      #0,D0                       *Limpiamos el registro D0 (CONTADOR)
               MOVE.L      #0,D1                       *Limpiamos el registro D1 (GUARDAMOS EL DATO DE LECTURA)
 
-
   BTB_LOOP:   CMP.L       D4,D5                       *Comprobamos si lectura = escritura
-              BEQ         NOLINEA                   *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
-
+              BEQ         NOLINEA                     *El puntero de escritura (la copia) ha llegado al mismo sitio que el puntero de escritura. No hay mas elementos que contar
               MOVE.L      D4,A0                       *Llevamos el D4 al A0
               MOVE.B      (A0),D1                     *Leemos el dato
               ADD.L       #1,D0                       *A?adimos uno al contador
-
               CMP.L       D1,D7                       *Si el dato leido es 13, vamos al final de la subrutina
               BEQ         F_BTB_LIN
-
               CMP.L       D6,D4                       *Si el puntero de lectura ha llegado al final vamos a inicio del buffer
               BEQ         INICIO_BTB
-
               ADD.L       #1,D4                       *Aumentamos el puntero al siguiente elemento
               BRA         BTB_LOOP
 
@@ -633,15 +587,12 @@ LLENO:      MOVE.L      #$ffffffff,D0
               MOVE.L      A0,D4                       *Guardamos el puntero de inicio en D2
               BRA         BTB_LOOP
 
-  F_BTB_LIN: RTS                                      *Se termina la rutina
-
-
-
+  F_BTB_LIN:  RTS                                     *Se termina la rutina
 
   LI_LIN_A:   BTST        #1,D2            *Se repite el mismo esquema que LIN_B
               BEQ         LI_BRA
 
-              ******Buffer transmision A**************
+      ******Buffer transmision A**************
                   MOVE.L      bta_lectura,A0
                   MOVE.L      A0,D4
                   MOVE.L      bta_escritura,A1
@@ -652,28 +603,23 @@ LLENO:      MOVE.L      #$ffffffff,D0
                   MOVE.L      #0,D0
                   MOVE.L      #0,D1
 
-
       BTA_LOOP:   CMP.L       D4,D5
                   BEQ         NOLINEA
-
                   MOVE.L      D4,A0
                   MOVE.B      (A0),D1
                   ADD.L       #1,D0
-
                   CMP.L       D1,D7
                   BEQ         FBTALIN
-
                   CMP.L       D6,D4
                   BEQ         INI_BTA
-
                   ADD.L       #1,D4
                   BRA         BTA_LOOP
 
-      INI_BTA: MOVE.L      #bta,A0
+      INI_BTA:    MOVE.L      #bta,A0
                   MOVE.L      A0,D4
                   BRA         BTA_LOOP
 
-      FBTALIN: RTS
+      FBTALIN:    RTS
 
       ******Buffer recepcion B**************
 
@@ -690,17 +636,13 @@ LLENO:      MOVE.L      #$ffffffff,D0
 
         BRB_LOOP: CMP.L       D4,D5
                   BEQ         NOLINEA
-
                   MOVE.L      D4,A0
                   MOVE.B      (A0),D1
                   ADD.L       #1,D0
-
                   CMP.L       D1,D7
                   BEQ         FBRBLIN
-
                   CMP.L       D6,D4
                   BEQ         INI_BRB
-
                   ADD.L       #1,D4
                   BRA         BRB_LOOP
 
@@ -708,7 +650,7 @@ LLENO:      MOVE.L      #$ffffffff,D0
                   MOVE.L      A0,D4
                   BRA         BTA_LOOP
 
-        FBRBLIN: RTS
+        FBRBLIN:  RTS
 
         ******Buffer recepcion A**************
 
@@ -722,20 +664,15 @@ LLENO:      MOVE.L      #$ffffffff,D0
                     MOVE.L      #0,D0
                     MOVE.L      #0,D1
 
-
           BRA_LOOP: CMP.L       D4,D5
                     BEQ         NOLINEA
-
                     MOVE.L      D4,A0
                     MOVE.B      (A0),D1
                     ADD.L       #1,D0
-
                     CMP.L       D1,D7
                     BEQ         FBRALIN
-
                     CMP.L       D6,D4
                     BEQ         INI_BRA
-
                     ADD.L       #1,D4
                     BRA         BRA_LOOP
 
@@ -743,11 +680,10 @@ LLENO:      MOVE.L      #$ffffffff,D0
                     MOVE.L      A0,D4
                     BRA         BRB_LOOP
 
-        FBRALIN: RTS
+        FBRALIN:    RTS
 
-
-NOLINEA:      MOVE.L       #0,D0
-              RTS
+        NOLINEA:    MOVE.L       #0,D0
+                    RTS
 
 **************************** FIN LINEA ********************************************************
 
@@ -757,28 +693,25 @@ NOLINEA:      MOVE.L       #0,D0
 **************************** PROGRAMA PRINCIPAL **********************************************
 INICIO:     BSR  INIT                 * Inicia el controlador
             
+          
             
 
-            
-
-
-            MOVE.L  #5,D0
-            MOVE.L  #0,D1
-            MOVE.L  #bprint,D2
-            SUB.W   #2,A7
-            MOVE.W  D0,(A7)
+            MOVE.L  #11,D1
+            MOVE.L  #$0,D2
+            MOVE.L  #bscan,D3
             SUB.W   #2,A7
             MOVE.W  D1,(A7)
-            MOVE.L  D2,-(A7)
-            BSR PRINT
-            MOVE.L  (A7),D2
+            SUB.W   #2,A7
+            MOVE.W  D2,(A7)
+            MOVE.L  D3,-(A7)
+            BSR     SCAN
+            MOVE.L  #0,D2
+            MOVE.L  #0,D1
+            MOVE.L  (A7),D3
+            ADD.L   #2,A7
+            MOVE.W  (A7),D2
             ADD.L   #2,A7
             MOVE.W  (A7),D1
-            ADD.L   #2,A7
-            MOVE.W  (A7),D0
-
-          
-
 
             BREAK
 **************************** FIN PROGRAMA PRINCIPAL ******************************************
