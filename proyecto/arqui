@@ -129,16 +129,83 @@ INIT:   MOVE.B          #%00010000,CRA      * Reinicia el puntero a MR1A
 **************************** FIN INIT *********************************************************
 
 
-
 **************************** RTI ************************************************************
 
-RTI:
-      
+    RTI:  MOVE.L A1,-(A7)
+          MOVE.L A2,-(A7)
+          MOVE.L A3,-(A7)
+          MOVE.L A4,-(A7)
+          MOVE.L A5,-(A7)
+          MOVE.L A6,-(A7)
+          MOVE.L D0,-(A7)
+          MOVE.L D2,-(A7)
+          MOVE.L D1,-(A7)
+          MOVE.L D3,-(A7)
+          MOVE.L D4,-(A7)
+          MOVE.L D6,-(A7)
+          MOVE.L     copiaIMR,D7
+          AND.B      ISR,D7
+          CMP.L      D7,#0
+          BEQ        F_RTI
+          BTST       #0,D7           *Si el bit 0 == 1 --> Ir a interrupcion de recepcion de A
+          BNE        INT_R_A         
+          BTST       #1,D7
+          BNE        INT_T_A
+          BTST       #4,D7
+          BNE        INT_R_B         
+          BTST       #5,D7
+          BNE        INT_T_B
+INT_R_A:  MOVE.B     RBA,A0
+          MOVE.B     (A0),D1
+          MOVE.L     #0,D0
+          BSR        ESSCAR
+          **ESTA FINALIZADO???
+          BRA        F_RTI
 
+          
+INT_R_B:  MOVE.B     RBB,A0
+          MOVE.B     (A0),D1
+          MOVE.L     #0,D0
+          BSR        ESSCAR
+          **ESTA FINALIZADO???
+          BRA        F_RTI
 
-      
+          
+INT_T_A:  MOVE.L    #0,D0
+          BSR       LEECAR
+          CMP.B     #13,D0    *Si es un retorno de carro, escribimos un salto de linea
+          BEQ       INT_T_A_N 
+          MOVE.B    D0,TBA
+          BRA        F_RTI
+          
+INT_T_A_N:MOVE.B    #10,TBA   *El salto de linea es un 10 es ASCII
+          BRA        F_RTI
 
-      RTS
+ 
+INT_T_B:  MOVE.L    #1,D0
+          BSR       LEECAR
+          CMP.B     #13,D0    *Si es un retorno de carro, escribimos un salto de linea
+          BEQ       INT_T_B_N 
+          MOVE.B    D0,TBB
+          BRA       F_RTI
+          
+INT_T_B_N:MOVE.B    #10,TBB   *El salto de linea es un 10 es ASCII
+
+          
+F_RTI:    MOVE.L (A7)+,A1
+          MOVE.L (A7)+,A2
+          MOVE.L (A7)+,A3
+          MOVE.L (A7)+,A4
+          MOVE.L (A7)+,A5
+          MOVE.L (A7)+,A6
+          MOVE.L (A7)+,D0
+          MOVE.L (A7)+,D1
+          MOVE.L (A7)+,D2
+          MOVE.L (A7)+,D3
+          MOVE.L (A7)+,D4
+          MOVE.L (A7)+,D6
+          RTE
+      RTE
 
 
 **************************** FIN RTI ********************************************************
