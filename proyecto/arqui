@@ -217,11 +217,11 @@ RTC_B:    MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de ca
           BRA      SEG_B
 
 INTER_A:  BTST     #0,copiaIMR                  *Habilitamos las interrupciones de transmisi?n de A en la copia del IMR == 00100011
-          MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia            
+          MOVE.B   copiaIMR,IMR                 *Actualizamos el IMR con su copia            
           BRA FIN
 
 INTER_B:  BTST     #4,copiaIMR                  *Habilitamos las interrupciones de transmisi?n de B en la copia del IMR == 00110010
-          MOVE.L   copiaIMR,IMR                 *Actualizamos el IMR con su copia           
+          MOVE.B   copiaIMR,IMR                 *Actualizamos el IMR con su copia           
           BRA FIN                                
 
 **************************** FIN PRINT ********************************************************
