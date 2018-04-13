@@ -158,8 +158,7 @@ PRINT:    LINK      A6,#16              *Creaci?n del marco de pila
           CMP.L     D2,D1
           BEQ       FIN
           MOVE.W    $c(A6),D2           *Pasar el valor del par?metro Descriptor al registro deseado (en este caso D2)          
-          MOVE.L    #1,D4
-          CMP.L     D4,D2               *Comprobaci?n de si los par?metros son correctos
+          CMP.L     #1,D2               *Comprobaci?n de si los par?metros son correctos
           BGT       P_INCORRECTO
           MOVE.L    $8(A6),D3
           MOVE.L    #0,-4(A6)           *Contador de caracteres aceptados -> marco de pila
@@ -226,6 +225,7 @@ INTER_B:  MOVE.B   #%00110010,copiaIMR          *Habilitamos las interrupciones 
           BRA FIN                               
 
 **************************** FIN PRINT ********************************************************
+
 
 
 
