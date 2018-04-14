@@ -100,8 +100,8 @@ INIT:   MOVE.B          #%00010000,CRA      * Reinicia el puntero a MR1A
         MOVE.B          #$40,IVR            * Vector de interrupcion 40(hexadecimal)(RTI en posicion 100 hexadecimal)
         MOVE.B          #RTI,$100           * RTI en la posici?n 100 (hexadecimal)                                    
         
-        MOVE.L  #TAM_B,D0
-        SUB.L   #1,D0
+        MOVE.L          #TAM_B,D0
+        SUB.L           #1,D0
 
         *INICIALIZACION DE PUNTEROS
 
@@ -140,19 +140,22 @@ INIT:   MOVE.B          #%00010000,CRA      * Reinicia el puntero a MR1A
 
 **************************** RTI ************************************************************
 
-RTI:      MOVE.L    A1,-(A7)
+RTI:      MOVE.L    A0,-(A7)
+          MOVE.L    A1,-(A7)
           MOVE.L    A2,-(A7)
           MOVE.L    A3,-(A7)
           MOVE.L    A4,-(A7)
           MOVE.L    A5,-(A7)
           MOVE.L    A6,-(A7)
           MOVE.L    D0,-(A7)
-          MOVE.L    D2,-(A7)
           MOVE.L    D1,-(A7)
+          MOVE.L    D2,-(A7)
           MOVE.L    D3,-(A7)
           MOVE.L    D4,-(A7)
+          MOVE.L    D5,-(A7)
           MOVE.L    D6,-(A7)
-          MOVE.L    copiaIMR,D7
+          MOVE.L    D7,-(A7)
+B_RTI:    MOVE.L    copiaIMR,D7
           AND.B     ISR,D7
           CMP.L     #0,D7
           BEQ       F_RTI
@@ -164,31 +167,34 @@ RTI:      MOVE.L    A1,-(A7)
           BNE       INT_R_B         
           BTST      #5,D7
           BNE       INT_T_B
-F_RTI:    MOVE.L    (A7)+,A1
-          MOVE.L    (A7)+,A2
-          MOVE.L    (A7)+,A3
-          MOVE.L    (A7)+,A4
-          MOVE.L    (A7)+,A5
-          MOVE.L    (A7)+,A6
-          MOVE.L    (A7)+,D0
-          MOVE.L    (A7)+,D1
-          MOVE.L    (A7)+,D2
-          MOVE.L    (A7)+,D3
-          MOVE.L    (A7)+,D4
+F_RTI:    MOVE.L    (A7)+,D7
           MOVE.L    (A7)+,D6
+          MOVE.L    (A7)+,D5
+          MOVE.L    (A7)+,D4
+          MOVE.L    (A7)+,D3
+          MOVE.L    (A7)+,D2
+          MOVE.L    (A7)+,D1
+          MOVE.L    (A7)+,D0
+          MOVE.L    (A7)+,A6
+          MOVE.L    (A7)+,A5
+          MOVE.L    (A7)+,A4
+          MOVE.L    (A7)+,A3
+          MOVE.L    (A7)+,A2
+          MOVE.L    (A7)+,A1
+          MOVE.L    (A7)+,A0
           RTE
 
 INT_R_A:  MOVE.L    RBA,A0
           MOVE.B    (A0),D1
           MOVE.L    #0,D0
           BSR       ESCCAR
-          BRA       F_RTI
+          BRA       B_RTI
 
 INT_R_B:  MOVE.L    RBB,A0
           MOVE.B    (A0),D1
           MOVE.L    #0,D0
           BSR       ESCCAR
-          BRA       F_RTI
+          BRA       B_RTI
 
 INT_T_A:  MOVE.L    #0,D0
           BSR       LEECAR
@@ -196,14 +202,14 @@ INT_T_A:  MOVE.L    #0,D0
           BEQ       SALTO_A
           MOVE.B    D0,TBA
           BRA       INT_T_A
-
 SALTO_A:  MOVE.B    #10,TBA
           MOVE.L    #0,D0
           BSR       LINEA
           CMP.B     #0,D0
           BNE       INT_T_A
           BCLR      #0,copiaIMR
-          BRA       F_RTI
+          MOVE.B    copiaIMR,IMR
+          BRA       B_RTI
 
 INT_T_B:  MOVE.L    #1,D0
           BSR       LEECAR
@@ -211,14 +217,14 @@ INT_T_B:  MOVE.L    #1,D0
           BEQ       SALTO_B
           MOVE.B    D0,TBB
           BRA       INT_T_B
-
 SALTO_B:  MOVE.B    #10,TBA
           MOVE.L    #1,D0
           BSR       LINEA
           CMP.B     #0,D0
           BNE       INT_T_B
           BCLR      #4,copiaIMR
-          BRA       F_RTI
+          MOVE.B    copiaIMR,IMR
+          BRA       B_RTI
 
 
 **************************** FIN RTI ********************************************************
@@ -801,18 +807,18 @@ INICIO:     *Manejadores de excepciones
             SUB.W D0,TAME             * Actualiza el tama~no de escritura
             BNE ESPE                  * Si no se ha escrito todo el bloque se insiste
             CMP.W #TAMB,CONTC         * Si el no de caracteres que quedan es menor que el tamaño establecido se transmite ese número
-            BHI OTRAE * Siguiente bloque
+            BHI OTRAE                 * Siguiente bloque
             MOVE.W CONTC,TAME
-            BRA ESPE * Siguiente bloque
+            BRA ESPE                  * Siguiente bloque
     SALIR:  BRA BUCPR
     FIN:    BREAK
-BUS_ERROR:  BREAK * Bus error handler
+BUS_ERROR:  BREAK                     * Bus error handler
             NOP
-ADDRESS_ER: BREAK * Address error handler
+ADDRESS_ER: BREAK                     * Address error handler
             NOP
-ILLEGAL_IN: BREAK * Illegal instruction handler
+ILLEGAL_IN: BREAK                     * Illegal instruction handler
             NOP
-PRIV_VIOLT: BREAK * Privilege violation handler
+PRIV_VIOLT: BREAK                     * Privilege violation handler
             NOP
 
             BREAK
