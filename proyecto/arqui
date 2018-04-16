@@ -14,7 +14,9 @@
         btb:      DS.B    TAM_B     *1b73
         bscan:    DS.B    2000      *2344
         bprint:   DS.B    2000      *2b14
-        copiaIMR: DS.B    2     
+        copiaIMR: DS.B    2 
+        flagTBA:  DS.B    1
+        flagTBB:  DS.B    1   
 
 
         *Punteros
@@ -50,7 +52,7 @@
         TAME:     DC.W    0 * Tama~no de escritura para print
         DESA:     EQU     0 * Descriptor l??nea A
         DESB:     EQU     1 * Descriptor l??nea B
-        NLIN:     EQU     10 * N?umero de l??neas a leer
+        NLIN:     EQU     1 * N?umero de l??neas a leer
         TAML:     EQU     30 * Tama~no de l??nea para SCAN
         TAMB:     EQU     5 * Tama~no de bloque para PRINT
 
@@ -99,10 +101,12 @@ INIT:   MOVE.B          #%00010000,CRA      * Reinicia el puntero a MR1A
         MOVE.B          #%00100010,IMR      * Habilitadas las interrupciones de recepci?n
         MOVE.B          #%00100010,copiaIMR
         MOVE.B          #$40,IVR            * Vector de interrupcion 40(hexadecimal)(RTI en posicion 100 hexadecimal)
-        *MOVE.B          #RTI,$100           * RTI en la posici?n 100 (hexadecimal)
-        LEA      RTI,A1               * Direcci?n de la tabla de vectores
-        MOVE.L   #$100,A2             * $100 es la direcci?n siguiente al V.I.
-        MOVE.L   A1,(A2)              * Actualizaci?n de la direcci?n de la tabla                                    
+        MOVE.B          #0,flagTBA
+        MOVE.B          #0,flagTBB
+
+        LEA             RTI,A1               * Direcci?n de la tabla de vectores
+        MOVE.L          #$100,A2             * $100 es la direcci?n siguiente al V.I.
+        MOVE.L          A1,(A2)              * Actualizaci?n de la direcci?n de la tabla                                    
         
         MOVE.L          #TAM_B,D0
         SUB.L           #1,D0
@@ -200,32 +204,42 @@ INT_R_B:  MOVE.L    #0,D1
           BSR       ESCCAR
           BRA       B_RTI
 
-INT_T_A:  MOVE.L    #2,D0
-          BSR       LEECAR
-          CMP.B     #13,D0
+INT_T_A:  CMP.B     #1,flagTBA
           BEQ       SALTO_A
+          MOVE.L    #2,D0
+          BSR       LEECAR
           MOVE.B    D0,TBA
-          BRA       INT_T_A
-SALTO_A:  MOVE.B    #10,TBA
+          CMP.B     #13,D0
+          BEQ       RETC_A
+          BRA       B_RTI
+RETC_A:   MOVE.B    #1,flagTBA
+          BRA       B_RTI
+SALTO_A:  MOVE.B    #0,flagTBA
+          MOVE.B    #10,TBA
           MOVE.L    #2,D0
           BSR       LINEA
           CMP.B     #0,D0
-          BNE       INT_T_A
+          BNE       B_RTI
           BCLR      #0,copiaIMR
           MOVE.B    copiaIMR,IMR
           BRA       B_RTI
 
-INT_T_B:  MOVE.L    #3,D0
-          BSR       LEECAR
-          CMP.B     #13,D0
+INT_T_B:  CMP.B     #1,flagTBB
           BEQ       SALTO_B
+          MOVE.L    #3,D0
+          BSR       LEECAR
           MOVE.B    D0,TBB
-          BRA       INT_T_B
-SALTO_B:  MOVE.B    #10,TBB
+          CMP.B     #13,D0
+          BEQ       RETC_B
+          BRA       B_RTI
+RETC_B:   MOVE.B    #1,flagTBB
+          BRA       B_RTI
+SALTO_B:  MOVE.B    #0,flagTBB
+          MOVE.B    #10,TBB
           MOVE.L    #3,D0
           BSR       LINEA
           CMP.B     #0,D0
-          BNE       INT_T_B
+          BNE       B_RTI
           BCLR      #4,copiaIMR
           MOVE.B    copiaIMR,IMR
           BRA       B_RTI
@@ -825,4 +839,4 @@ PRIV_VIOLT: BREAK                     * Privilege violation handler
             NOP
 
             BREAK
-**************************** FIN PROGRAMA PRINCIPAL ****************************************** 
+**************************** FIN PROGRAMA PRINCIPAL ****************************************** 
