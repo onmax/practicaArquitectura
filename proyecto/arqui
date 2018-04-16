@@ -202,9 +202,9 @@ INT_R_B:  MOVE.L    #0,D1
 
 INT_T_A:  MOVE.L    #2,D0
           BSR       LEECAR
-          MOVE.B    D0,TBA
           CMP.B     #13,D0
           BEQ       SALTO_A
+          MOVE.B    D0,TBA
           BRA       INT_T_A
 SALTO_A:  MOVE.B    #10,TBA
           MOVE.L    #2,D0
@@ -217,9 +217,9 @@ SALTO_A:  MOVE.B    #10,TBA
 
 INT_T_B:  MOVE.L    #3,D0
           BSR       LEECAR
-          MOVE.B    D0,TBB
           CMP.B     #13,D0
           BEQ       SALTO_B
+          MOVE.B    D0,TBB
           BRA       INT_T_B
 SALTO_B:  MOVE.B    #10,TBB
           MOVE.L    #3,D0
@@ -825,4 +825,4 @@ PRIV_VIOLT: BREAK                     * Privilege violation handler
             NOP
 
             BREAK
-**************************** FIN PROGRAMA PRINCIPAL ******************************************
+**************************** FIN PROGRAMA PRINCIPAL ****************************************** 
