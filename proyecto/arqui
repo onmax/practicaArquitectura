@@ -317,12 +317,16 @@ RTC_A:    MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de ca
 RTC_B:    MOVE.L   #1,-16(A6)          *Ponemos un 1 en el flag de retorno de carro
           BRA      SEG_B
 
-INTER_A:  BSET     #0,copiaIMR         *Habilitamos las interrupciones de transmisi?n de A en la copia del IMR
-          MOVE.B   copiaIMR,IMR        *Actualizamos el IMR con su copia            
+INTER_A:  MOVE.W   #$2700,SR
+	  BSET     #0,copiaIMR         *Habilitamos las interrupciones de transmisi?n de A en la copia del IMR
+          MOVE.B   copiaIMR,IMR        *Actualizamos el IMR con su copia   
+	  MOVE.W   #$2000,SR         
           BRA      FIN_P
 
-INTER_B:  BSET     #4,copiaIMR         *Habilitamos las interrupciones de transmisi?n de A en la copia del IMR
-          MOVE.B   copiaIMR,IMR        *Actualizamos el IMR con su copia           
+INTER_B:  MOVE.W   #$2700,SR
+	  BSET     #4,copiaIMR         *Habilitamos las interrupciones de transmisi?n de A en la copia del IMR
+          MOVE.B   copiaIMR,IMR        *Actualizamos el IMR con su copia
+	  MOVE.W   #$2000,SR          
           BRA      FIN_P                               
 
 **************************** FIN PRINT ********************************************************
@@ -803,7 +807,7 @@ INICIO:     *Manejadores de excepciones
             MOVE.W #NLIN,CONTL        * Inicializa contador de L??neas
             MOVE.L #BUFFER,DIRLEC     * Direcci?on de lectura = comienzo del buffer
     OTRAL:  MOVE.W #TAML,-(A7)        * Tama~no m?aximo de la l??nea
-            MOVE.W #DESA,-(A7)        * Puerto A
+            MOVE.W #DESB,-(A7)        * Puerto A
             MOVE.L DIRLEC,-(A7)       * Direcci?on de lectura
     ESPL:   BSR SCAN
             CMP.L #0,D0
