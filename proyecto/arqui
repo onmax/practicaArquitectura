@@ -251,7 +251,7 @@ SALTO_B:  MOVE.B    #0,flagTBB
 
 
 **************************** PRINT ************************************************************
-PRINT:    LINK      A6,#16              *Creaci?n del marco de pila
+PRINT:    LINK      A6,#-16              *Creaci?n del marco de pila
           MOVE.L    #0,D1
           MOVE.L    #0,D2
           MOVE.W    $e(A6),D1           *Pasar el valor del par?metro Tama?o al registro deseado (en este caso D1)
